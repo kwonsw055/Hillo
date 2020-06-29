@@ -1,3 +1,10 @@
 <resources>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="main_button_width">70dp</dimen>
+    <dimen name="main_button_height">70dp</dimen>
+    <dimen name="main_button_margin">5dp</dimen>
+    <dimen name="recycler_content_height">100dp</dimen>
+    <dimen name="recycler_content_image_size">70dp</dimen>
+    <dimen name="recylcer_content_image_margin">15dp</dimen>
+    <dimen name="recycler_font_size">16sp</dimen>
 </resources>

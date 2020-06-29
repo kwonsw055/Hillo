@@ -1,12 +1,14 @@
 package com.freefriday.hillo
 
+import android.opengl.Visibility
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TableLayout
-import android.widget.TableRow
+import android.widget.*
+import androidx.fragment.app.Fragment
 import java.text.AttributedCharacterIterator
 
 class MainActivity : AppCompatActivity() {
@@ -30,6 +32,25 @@ class MainActivity : AppCompatActivity() {
             table_main.addView(temp_row)
         }
         */
+        val frame = findViewById<LinearLayout>(R.id.main_frame)
+        val btn_rec = findViewById<Button>(R.id.btn_rec)
+        val framechild = LayoutInflater.from(applicationContext).inflate(R.layout.fragment_todo_list,frame)
+        framechild.visibility = View.VISIBLE
+        val temp = LayoutInflater.from(applicationContext).inflate(R.layout.recycler_content,frame)
+        temp.visibility = View.VISIBLE
+        /*
+        btn_rec.setOnClickListener {
+            if(framechild.visibility == View.VISIBLE){
+                framechild.visibility = View.GONE
+                temp.visibility = View.VISIBLE
+            }
+            else{
+                framechild.visibility = View.VISIBLE
+                temp.visibility = View.GONE
+            }
+        }
+
+         */
     }
 }
 

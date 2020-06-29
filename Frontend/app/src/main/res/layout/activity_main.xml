@@ -6,14 +6,61 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <fragment
-        android:id="@+id/fragment"
-        android:name="com.freefriday.hillo.TodoList"
-        android:layout_width="350dp"
-        android:layout_height="500dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <LinearLayout
+        android:id="@+id/main_frame"
+        android:layout_width="409dp"
+        android:layout_height="633dp"
+        android:layout_marginBottom="1dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/btn_rec"
+            android:layout_width="@dimen/main_button_width"
+            android:layout_height="@dimen/main_button_height"
+            android:layout_margin="@dimen/main_button_margin"
+            android:layout_weight="1"
+            android:text="R" />
+
+        <Button
+            android:id="@+id/btn_my"
+            android:layout_width="@dimen/main_button_width"
+            android:layout_height="@dimen/main_button_height"
+            android:layout_margin="@dimen/main_button_margin"
+            android:layout_weight="1"
+            android:text="MySchd" />
+
+        <Button
+            android:id="@+id/btn_frn"
+            android:layout_width="@dimen/main_button_width"
+            android:layout_height="@dimen/main_button_height"
+            android:layout_margin="@dimen/main_button_margin"
+            android:layout_weight="1"
+            android:text="Friend" />
+
+        <Button
+            android:id="@+id/btn_opt"
+            android:layout_width="@dimen/main_button_width"
+            android:layout_height="@dimen/main_button_height"
+            android:layout_margin="@dimen/main_button_margin"
+            android:layout_weight="1"
+            android:text="Option" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
