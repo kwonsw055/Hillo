@@ -27,10 +27,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val btn_my = findViewById<Button>(R.id.btn_my)
+        val btn_frn = findViewById<Button>(R.id.btn_frn)
         btn_my.setOnClickListener {
             val startintent = Intent(applicationContext, LoginActivity::class.java)
             startActivity(startintent)
         }
+        btn_frn.setOnClickListener { startActivity(Intent(applicationContext, addtable::class.java)) }
         val inst = object: KakaoAdapter(){
             override fun getApplicationConfig(): IApplicationConfig {
                 return IApplicationConfig {
