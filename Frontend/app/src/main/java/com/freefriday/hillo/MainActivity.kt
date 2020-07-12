@@ -40,7 +40,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        KakaoSDK.init(inst)
+        try{
+            KakaoSDK.init(inst)
+        }catch (e:KakaoSDK.AlreadyInitializedException){
+
+        }
         UserManagement.getInstance().me(ResponseClass())
     }
 
