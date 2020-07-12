@@ -83,19 +83,3 @@ interface Rinter{
     fun gettest(@Query("id") id: Long?, @Query("name") name:String?): Call<String>
 }
 
-fun int2date(i:Int):date?=
-    when(i){
-        0-> date.mon
-        1-> date.tue
-        2-> date.wed
-        3-> date.thu
-        4-> date.fri
-        5-> date.sat
-        6-> date.sun
-        else->null
-    }
-
-
-enum class date(val str: String){
-    mon("MON"), tue("TUE"), wed("WED"), thu("THU"), fri("FRI"), sat("SAT"), sun("SUN");
-}
