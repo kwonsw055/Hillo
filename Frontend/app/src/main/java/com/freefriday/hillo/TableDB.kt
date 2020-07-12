@@ -14,12 +14,13 @@ const val TimeTableEnd = "end"
 
 //DB file name
 const val TimeTableDBName = "timetable.db"
+const val TimeTableDBVersion = 2
 
 //Entity for time table
 @Entity(tableName = TimeTableName)
 class TimeTable(
     @PrimaryKey(autoGenerate = true) var id: Long?,
-    @ColumnInfo(name = TimeTableDay)var day: Date?,
+    @ColumnInfo(name = TimeTableDay)var day: Date,
     @ColumnInfo(name = TimeTableStart)var start:Int,
     @ColumnInfo(name = TimeTableEnd)var end:Int
 )
@@ -38,7 +39,7 @@ interface TimeTableDAO{
 }
 
 //Database for time table
-@Database(entities = [TimeTable::class], version = 1)
+@Database(entities = [TimeTable::class], version= TimeTableDBVersion)
 @TypeConverters(DateConverter::class)
 abstract class TimeTableDB:RoomDatabase(){
     abstract fun TimeTableDAO(): TimeTableDAO
@@ -57,8 +58,14 @@ abstract class TimeTableDB:RoomDatabase(){
 }
 
 //Date type for time table
-enum class Date(val str: String){
-    mon("MON"), tue("TUE"), wed("WED"), thu("THU"), fri("FRI"), sat("SAT"), sun("SUN");
+enum class Date(val str: String, val num: Int){
+    mon("MON", 0),
+    tue("TUE", 1),
+    wed("WED", 2),
+    thu("THU", 3),
+    fri("FRI", 4),
+    sat("SAT", 5),
+    sun("SUN", 6);
 }
 
 //Date type converter

@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
+import com.google.gson.annotations.SerializedName
 import com.kakao.auth.*
 import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
@@ -16,11 +17,13 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
 
 val timeN = 48
 val baseURL = "http://10.0.2.2:5000"
+var myid:Long? = null
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,10 +74,8 @@ class ResponseClass: MeV2ResponseCallback() {
         Log.i("DEBUGMSG", "id:" +result?.id.toString())
         Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
 
-        val retrof = Retrofit.Builder().baseUrl(baseURL).addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create()).build()
-        val rstarter = retrof.create(Rinter::class.java)
-        rstarter.gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass())
+        myid = result?.id
+        RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass())
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {
@@ -82,8 +83,30 @@ class ResponseClass: MeV2ResponseCallback() {
     }
 }
 
+class RetrofitObj{
+    companion object{
+        private var rInstance:Rinter? = null
+        fun getinst():Rinter{
+            if(rInstance==null){
+                synchronized(this){
+                    rInstance = Retrofit.Builder().baseUrl(baseURL).addConverterFactory(ScalarsConverterFactory.create())
+                        .addConverterFactory(GsonConverterFactory.create()).build().create(Rinter::class.java)
+                }
+            }
+            return rInstance!!
+        }
+    }
+}
+
 interface Rinter{
     @POST("test-q")
     fun gettest(@Query("id") id: Long?, @Query("name") name:String?): Call<String>
+    @POST("test-sett")
+    fun settime(@Body body:TimeList):Call<String>
 }
 
+data class TimeList(
+    @SerializedName("id") val id:Long,
+    @SerializedName("day") val day:List<Int>,
+    @SerializedName("start") val start:List<Int>,
+    @SerializedName("end") val end:List<Int>)
