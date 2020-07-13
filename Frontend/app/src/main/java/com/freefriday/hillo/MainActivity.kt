@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
+import androidx.browser.browseractions.BrowserActionsIntent
+import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 import com.kakao.auth.*
 import com.kakao.network.ErrorResult
@@ -18,8 +20,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import java.lang.StringBuilder
 
 val timeN = 48
 val baseURL = "http://10.0.2.2:5000"
@@ -49,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         }
         UserManagement.getInstance().me(ResponseClass())
+
     }
 
 }
@@ -60,10 +65,56 @@ class CallBackClass:Callback<String>{
     override fun onResponse(call: Call<String>, response: Response<String>) {
         if(response.isSuccessful){
             Log.i("DEBUGMSG", "rsp="+response.body())
+            val parsed = GsonBuilder().create().fromJson(response.body(), FreetimeArray::class.java)
+            parsed?.let {
+                Log.i("DEBUGMSG", it.toString())
+            }
         }
         else{
             Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody())
         }
+    }
+}
+
+data class Timepair(
+    @SerializedName("day")
+    val day: String,
+    @SerializedName("start")
+    val start: Int,
+    @SerializedName("end")
+    val end: Int
+){
+    override fun toString(): String {
+        return "$day/$start/$end"
+    }
+}
+
+data class FreetimeJson(
+    @SerializedName("fid") val fid:Long,
+    @SerializedName("times") val times:Array<Timepair>
+){
+    override fun toString(): String {
+        val str = StringBuilder()
+        str.append("fid=$fid\n")
+        times.forEach {
+            str.append(it.toString())
+            str.append("\n")
+        }
+        return str.toString()
+    }
+}
+
+data class FreetimeArray(
+    @SerializedName("result")
+    val result: Array<FreetimeJson>
+){
+    override fun toString(): String {
+        val str = StringBuilder()
+        result.forEach {
+            str.append(it.toString())
+            str.append("\n")
+        }
+        return str.toString()
     }
 }
 
@@ -76,6 +127,7 @@ class ResponseClass: MeV2ResponseCallback() {
 
         myid = result?.id
         RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass())
+        RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass())
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {
@@ -103,6 +155,8 @@ interface Rinter{
     fun gettest(@Query("id") id: Long?, @Query("name") name:String?): Call<String>
     @POST("test-sett")
     fun settime(@Body body:TimeList):Call<String>
+    @GET("test-getft")
+    fun getfreetime(@Query("id") id:Long?): Call<String>
 }
 
 data class TimeList(
