@@ -163,7 +163,8 @@ def getinter(timelist, targlist):
                 if end<targend: candend = end
                 else: candend = targend
                 if candstart<candend:
-                    candidate.append((day, candstart, candend))
+                    if {"day":day, "start":candstart, "end":candend} not in candidate:
+                        candidate.append({"day":day, "start":candstart, "end":candend})
     return candidate
 
 #Add user using json request
@@ -251,4 +252,4 @@ def testgetf():
             ftimelist.append((f[free_day], f[start_time], f[end_time]))
         inter = getinter(mytimelist, ftimelist)
         if len(inter)>0: result.append({"fid":fid[friend_id], "times":inter})
-    return jsonify(result)
+    return jsonify({"result":result})
