@@ -4,8 +4,11 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.widget.*
 import androidx.browser.browseractions.BrowserActionsIntent
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 import com.kakao.auth.*
@@ -28,13 +31,24 @@ import java.lang.StringBuilder
 val timeN = 48
 val baseURL = "http://10.0.2.2:5000"
 var myid:Long? = null
+lateinit var rvadapter: RVAdapter
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val btn_rec = findViewById<Button>(R.id.btn_rec)
         val btn_my = findViewById<Button>(R.id.btn_my)
         val btn_frn = findViewById<Button>(R.id.btn_frn)
+        val main_frame = findViewById<LinearLayout>(R.id.main_frame)
+
+        rvadapter = RVAdapter(null)
+        //val recycler = LayoutInflater.from(applicationContext).inflate(R.layout.recycler_view, main_frame) as RecyclerView
+        val recycler = findViewById<RecyclerView>(R.id.rv)
+        recycler.setHasFixedSize(true)
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.adapter = rvadapter
+
         btn_my.setOnClickListener {
             val startintent = Intent(applicationContext, LoginActivity::class.java)
             startActivity(startintent)
@@ -68,6 +82,8 @@ class CallBackClass:Callback<String>{
             val parsed = GsonBuilder().create().fromJson(response.body(), FreetimeArray::class.java)
             parsed?.let {
                 Log.i("DEBUGMSG", it.toString())
+                rvadapter.data = parsed.toFreetime()
+                rvadapter.notifyDataSetChanged()
             }
         }
         else{
@@ -84,8 +100,14 @@ data class Timepair(
     @SerializedName("end")
     val end: Int
 ){
+    fun timeformat(time: Int):String{
+        val h = time/100
+        val pm = if(h>=12){"PM"}else{"AM"}
+        val m = time%100
+        return "$h:${"%02d".format(m)} $pm"
+    }
     override fun toString(): String {
-        return "$day/$start/$end"
+        return "$day ${timeformat(start)}~${timeformat(end)}"
     }
 }
 
@@ -102,6 +124,13 @@ data class FreetimeJson(
         }
         return str.toString()
     }
+    fun toFreetime():Array<Freetime>{
+        val res = mutableListOf<Freetime>()
+        times.forEach {
+            res.add(Freetime(fid, it))
+        }
+        return res.toTypedArray()
+    }
 }
 
 data class FreetimeArray(
@@ -116,7 +145,19 @@ data class FreetimeArray(
         }
         return str.toString()
     }
+    fun toFreetime():Array<Freetime>{
+        val res = mutableListOf<Freetime>()
+        result.forEach {
+            it.toFreetime().forEach { t->res.add(t) }
+        }
+        return res.toTypedArray()
+    }
 }
+
+data class Freetime(
+    val id: Long,
+    val time: Timepair
+)
 
 class ResponseClass: MeV2ResponseCallback() {
     override fun onSuccess(result: MeV2Response?) {

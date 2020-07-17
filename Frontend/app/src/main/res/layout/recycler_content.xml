@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/recycler_content_height">
+    android:layout_height="@dimen/recycler_content_height"
+    android:animationCache="false"
+    android:background="#8C8C8C">
 
     <ImageView
         android:id="@+id/recycler_image"
@@ -19,12 +21,34 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
+    <Button
+        android:id="@+id/recycler_start"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:text="만나기"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/recycler_delete"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="3dp"
+        android:text="추천 삭제"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
         android:id="@+id/recycler_text_layout"
         android:layout_width="wrap_content"
         android:layout_height="100dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="@dimen/recylcer_content_image_margin"
+        android:layout_marginStart="4dp"
+        android:layout_marginLeft="4dp"
         android:gravity="center_vertical"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -46,31 +70,7 @@
             android:layout_margin="10dp"
             android:text="3:00PM(월)"
             android:textSize="@dimen/recycler_font_size" />
-    </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/recycler_button_layout"
-        android:layout_width="108dp"
-        android:layout_height="98dp"
-        android:layout_marginEnd="15dp"
-        android:layout_marginRight="@dimen/recylcer_content_image_margin"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <Button
-            android:id="@+id/recycler_start"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="약속 만들기" />
-
-        <Button
-            android:id="@+id/recycler_delete"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="추천 삭제" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
