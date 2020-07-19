@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.TextView
 
 //Deprecated
+//Now using TimeFrag as fragment, instead of activity.
 /*
 class addtable : AppCompatActivity() {
     val timelist= mutableListOf<TimeTable>()

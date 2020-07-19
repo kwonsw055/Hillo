@@ -1,3 +1,4 @@
+//Fragment for showing my time table
 package com.freefriday.hillo
 
 import android.os.Bundle
@@ -11,24 +12,33 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 
 class TimeFrag : Fragment() {
+    //text field for inputting time
     lateinit var text_time : EditText
+    //text view for showing time list
     lateinit var text_list : TextView
+    //button for submitting
     lateinit var btn_submit : Button
+    //list of time
     val timelist= mutableListOf<TimeTable>()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        //Initiate Views
         val inflated = inflater.inflate(R.layout.fragment_addtable, container, false)
         text_time = inflated.findViewById<EditText>(R.id.text_time)
         text_list = inflated.findViewById(R.id.text_list)
         btn_submit = inflated.findViewById(R.id.btn_submit)
         val applicationContext = inflater.context
+
+        //Get all time from time table DB
         getallTable(applicationContext, timelist,{
             activity?.runOnUiThread { text_list.text = timelist.print() }
         })
 
+        //function for adding time
         fun addtext(day:String, start:String, end:String){
             val convday = str2date(kor2day(day).toUpperCase())
             val convstart = start.toInt()
@@ -39,22 +49,26 @@ class TimeFrag : Fragment() {
             activity?.runOnUiThread { text_list.text = timelist.print() }
         }
 
+        //set button to submit text
         btn_submit.setOnClickListener {
-            if(text_time.text.toString() == "delete"){
+            if(text_time.text.toString() == "delete"){ //delete
                 deleteAll(applicationContext, {
                     timelist.clear()
                     activity?.runOnUiThread { text_list.text = timelist.print() }
                 })
-            }else{
+            }else{ //do parsing
                 val reg = """(\w+) (\d+) (\d+)""".toRegex()
                 var (day, start, end) = reg.find(text_time.text)!!.destructured
                 addtext(day, start, end)
             }
             activity?.runOnUiThread { text_list.text = null }
         }
+
+        //return value of onCreateView
         return inflated
     }
 
+    //On end, post time table.
     override fun onStop() {
         super.onStop()
         myid?.let {
@@ -62,18 +76,22 @@ class TimeFrag : Fragment() {
             val day = mutableListOf<Int>()
             val start = mutableListOf<Int>()
             val end = mutableListOf<Int>()
+
+            //Parse each components
             getInverseTime().forEach {
                 day.add(it.day.num)
                 start.add(it.start)
                 end.add(it.end)
             }
-            val tl = TimeList(id, day, start, end)
-            RetrofitObj.getinst().settime(tl).enqueue(CallBackClass{
+
+            //Post free time
+            RetrofitObj.getinst().settime(TimeList(id, day, start, end)).enqueue(CallBackClass{
                 Log.i("DEBUGMSG", it.toString())
             })
         }
     }
 
+    //Inverts timelist to freetime
     fun getInverseTime():MutableList<TimeTable>{
         val inverted = mutableListOf<TimeTable>()
         val grouped = timelist.groupBy { it.day }
@@ -92,6 +110,7 @@ class TimeFrag : Fragment() {
         return inverted
     }
 
+    //Converts Korean day string to English day string
     fun kor2day(str:String)= when(str){
         "월"->"MON"
         "화"->"TUE"
@@ -103,6 +122,7 @@ class TimeFrag : Fragment() {
         else->str
     }
 
+    //print in style for TimeTable
     fun MutableList<TimeTable>.print():String{
         val result = StringBuilder()
         for(str in this){

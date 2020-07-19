@@ -1,3 +1,4 @@
+//Schema of Time Table DB
 package com.freefriday.hillo
 
 import android.content.Context

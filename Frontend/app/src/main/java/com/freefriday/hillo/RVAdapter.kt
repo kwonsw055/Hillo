@@ -1,3 +1,4 @@
+//Recycler View adapter
 package com.freefriday.hillo
 
 import android.view.LayoutInflater

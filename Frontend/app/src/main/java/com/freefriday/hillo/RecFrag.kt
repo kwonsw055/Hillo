@@ -1,3 +1,4 @@
+//Fragment for recommendation
 package com.freefriday.hillo
 
 import android.os.Bundle

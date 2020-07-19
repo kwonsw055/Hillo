@@ -1,3 +1,4 @@
+//Schema of Friend DB
 package com.freefriday.hillo
 
 import android.content.Context
@@ -83,7 +84,7 @@ fun deleteFriend(context: Context, friendtable: Friend, afterexec: () -> Unit){
     }.start()
 }
 
-//Delete all
+//Delete all friends
 fun deleteAllFriends(context: Context, afterexec: () -> Unit){
     Thread{
         FriendDB.getinst(context)?.FriendDAO()?.deleteAll()
