@@ -143,10 +143,6 @@ def insert_freetime(id, freetime):
         return error_msg["insert_fail"]
     return success_msg
 
-#Make json
-def makejson(body):
-    return body
-
 #Get intersection between to time lists
 def getinter(timelist, targlist):
     candidate = []
@@ -240,7 +236,7 @@ def testgetf():
     print(mytime)
     result = []
     if len(mytime)==0:
-        return makejson(result)
+        return jsonify({"result":result})
     mytimelist = []
     for my in mytime:
         mytimelist.append((my[free_day], my[start_time], my[end_time]))
