@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.*
 import androidx.browser.browseractions.BrowserActionsIntent
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.GsonBuilder
@@ -31,7 +33,7 @@ import java.lang.StringBuilder
 val timeN = 48
 val baseURL = "http://10.0.2.2:5000"
 var myid:Long? = null
-lateinit var rvadapter: RVAdapter
+val rvadapter: RVAdapter by lazy{ RVAdapter(null)}
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,20 +42,24 @@ class MainActivity : AppCompatActivity() {
         val btn_rec = findViewById<Button>(R.id.btn_rec)
         val btn_my = findViewById<Button>(R.id.btn_my)
         val btn_frn = findViewById<Button>(R.id.btn_frn)
-        val main_frame = findViewById<LinearLayout>(R.id.main_frame)
+        val main_frame = findViewById<FrameLayout>(R.id.main_frame)
+        val frag = main_frame.findViewById<View>(R.id.rec_frag)
 
-        rvadapter = RVAdapter(null)
-        //val recycler = LayoutInflater.from(applicationContext).inflate(R.layout.recycler_view, main_frame) as RecyclerView
-        val recycler = findViewById<RecyclerView>(R.id.rv)
-        recycler.setHasFixedSize(true)
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = rvadapter
-
-        btn_my.setOnClickListener {
-            val startintent = Intent(applicationContext, LoginActivity::class.java)
-            startActivity(startintent)
+        //rvadapter = RVAdapter(null)
+        //val recycler = LayoutInflater.from(applicationContext).inflate(R.layout.fragment_rec, main_frame) as RecyclerView
+        val changeFrag = {
+            frag : Fragment->
+            val transaction = supportFragmentManager?.beginTransaction()
+            transaction.replace(R.id.rec_frag, frag)
+            transaction.commit()
         }
-        btn_frn.setOnClickListener { startActivity(Intent(applicationContext, addtable::class.java)) }
+        btn_rec.setOnClickListener {
+            changeFrag(RecFrag())
+        }
+        btn_my.setOnClickListener {
+            changeFrag(TimeFrag())
+        }
+        //btn_frn.setOnClickListener { startActivity(Intent(applicationContext, addtable::class.java)) }
         val inst = object: KakaoAdapter(){
             override fun getApplicationConfig(): IApplicationConfig {
                 return IApplicationConfig {
@@ -71,20 +77,26 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+inline fun <reified T> getJsonParse(response: Response<String>) = GsonBuilder().create().fromJson(response.body(), T::class.java)
+
 class CallBackClass:Callback<String>{
+    lateinit var afterSuccess: (Response<String>)->Unit
+    var afterFailure:(Throwable)->Unit = {}
+    constructor(success: (Response<String>)->Unit){
+        afterSuccess = success
+    }
+    constructor(success: (Response<String>)->Unit, failure: (Throwable)->Unit){
+        CallBackClass(success)
+        afterFailure = failure
+    }
     override fun onFailure(call: Call<String>, t: Throwable) {
         Log.i("DEBUGMSG", "mytest failed: "+t.message)
     }
-
     override fun onResponse(call: Call<String>, response: Response<String>) {
         if(response.isSuccessful){
             Log.i("DEBUGMSG", "rsp="+response.body())
-            val parsed = GsonBuilder().create().fromJson(response.body(), FreetimeArray::class.java)
-            parsed?.let {
-                Log.i("DEBUGMSG", it.toString())
-                rvadapter.data = parsed.toFreetime()
-                rvadapter.notifyDataSetChanged()
-            }
+            afterSuccess(response)
         }
         else{
             Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody())
@@ -167,8 +179,14 @@ class ResponseClass: MeV2ResponseCallback() {
         Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
 
         myid = result?.id
-        RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass())
-        RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass())
+        val doparse : (Response<String>)->Unit = {
+            val parsed = getJsonParse<FreetimeArray>(it)
+            rvadapter.data = parsed.toFreetime()
+            rvadapter.notifyDataSetChanged()
+        }
+        RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass(
+        doparse))
+        RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparse))
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {

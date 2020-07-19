@@ -8,6 +8,11 @@ import android.widget.Button
 import android.widget.Toast
 import com.kakao.auth.ISessionCallback
 import com.kakao.auth.Session
+import com.kakao.friends.AppFriendContext
+import com.kakao.friends.AppFriendOrder
+import com.kakao.friends.response.AppFriendsResponse
+import com.kakao.kakaotalk.callback.TalkResponseCallback
+import com.kakao.kakaotalk.v2.KakaoTalkService
 import com.kakao.network.ErrorResult
 import com.kakao.network.callback.ResponseCallback
 import com.kakao.usermgmt.UserManagement
@@ -37,8 +42,34 @@ class LoginActivity : AppCompatActivity() {
 
         override fun onSessionOpened() {
             Log.i("DEBUGMSG", "Login Success")
+            getFriendlist()
         }
 
+    }
+    val getFriendlist = {
+        val context = AppFriendContext(AppFriendOrder.NICKNAME, 0, 100, "asc")
+        val friendresponse = object : TalkResponseCallback<AppFriendsResponse>(){
+            override fun onSuccess(result: AppFriendsResponse?) {
+                Log.i("DEBUGMSG", "get friend success")
+                result?.friends!!.forEach{
+                    Log.i("DEBUGMSG", it.profileNickname)
+                    insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage), {})
+                }
+            }
+
+            override fun onNotKakaoTalkUser() {
+            }
+
+            override fun onSessionClosed(errorResult: ErrorResult?) {
+                Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage)
+            }
+
+            override fun onFailure(errorResult: ErrorResult?) {
+                Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage)
+            }
+        }
+
+        KakaoTalkService.getInstance().requestAppFriends(context, friendresponse)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,25 +1,32 @@
 package com.freefriday.hillo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 
-//Deprecated
-/*
-class addtable : AppCompatActivity() {
+class TimeFrag : Fragment() {
+    lateinit var text_time : EditText
+    lateinit var text_list : TextView
+    lateinit var btn_submit : Button
     val timelist= mutableListOf<TimeTable>()
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.fragment_addtable)
-
-        val text_time = findViewById<EditText>(R.id.text_time)
-        val btn_submit = findViewById<Button>(R.id.btn_submit)
-        val text_list = findViewById<TextView>(R.id.text_list)
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val inflated = inflater.inflate(R.layout.fragment_addtable, container, false)
+        text_time = inflated.findViewById<EditText>(R.id.text_time)
+        text_list = inflated.findViewById(R.id.text_list)
+        btn_submit = inflated.findViewById(R.id.btn_submit)
+        val applicationContext = inflater.context
         getallTable(applicationContext, timelist,{
-            runOnUiThread{text_list.text = timelist.print()}
+            activity?.runOnUiThread { text_list.text = timelist.print() }
         })
 
         fun addtext(day:String, start:String, end:String){
@@ -29,22 +36,23 @@ class addtable : AppCompatActivity() {
             val time = TimeTable(null, convday!!, convstart, convend)
             timelist.add(time)
             insertTable(applicationContext, time, {})
-            text_list.text = timelist.print()
+            activity?.runOnUiThread { text_list.text = timelist.print() }
         }
 
         btn_submit.setOnClickListener {
             if(text_time.text.toString() == "delete"){
                 deleteAll(applicationContext, {
                     timelist.clear()
-                    runOnUiThread{text_list.text = timelist.print()}
+                    activity?.runOnUiThread { text_list.text = timelist.print() }
                 })
             }else{
                 val reg = """(\w+) (\d+) (\d+)""".toRegex()
                 var (day, start, end) = reg.find(text_time.text)!!.destructured
                 addtext(day, start, end)
             }
-            text_time.text = null
+            activity?.runOnUiThread { text_list.text = null }
         }
+        return inflated
     }
 
     override fun onStop() {
@@ -60,7 +68,9 @@ class addtable : AppCompatActivity() {
                 end.add(it.end)
             }
             val tl = TimeList(id, day, start, end)
-            RetrofitObj.getinst().settime(tl).enqueue(CallBackClass())
+            RetrofitObj.getinst().settime(tl).enqueue(CallBackClass{
+                Log.i("DEBUGMSG", it.toString())
+            })
         }
     }
 
@@ -83,14 +93,14 @@ class addtable : AppCompatActivity() {
     }
 
     fun kor2day(str:String)= when(str){
-            "월"->"MON"
-            "화"->"TUE"
-            "수"->"WED"
-            "목"->"THU"
-            "금"->"FRI"
-            "토"->"SAT"
-            "일"->"SUN"
-            else->str
+        "월"->"MON"
+        "화"->"TUE"
+        "수"->"WED"
+        "목"->"THU"
+        "금"->"FRI"
+        "토"->"SAT"
+        "일"->"SUN"
+        else->str
     }
 
     fun MutableList<TimeTable>.print():String{
@@ -103,4 +113,3 @@ class addtable : AppCompatActivity() {
         return result.toString()
     }
 }
- */
