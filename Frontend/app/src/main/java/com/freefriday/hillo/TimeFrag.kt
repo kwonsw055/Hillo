@@ -70,6 +70,7 @@ class TimeFrag : Fragment() {
         num_start.maxValue = 47
         num_start.wrapSelectorWheel = false
         num_start.setFormatter(timeformater)
+        num_start.value = 18
         disableInput(num_start)
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_start) as EditText).filters = emptyArray()
 
@@ -78,6 +79,7 @@ class TimeFrag : Fragment() {
         num_end.maxValue = 47
         num_end.wrapSelectorWheel = false
         num_end.setFormatter(timeformater)
+        num_end.value = 20
         disableInput(num_end)
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_end) as EditText).filters = emptyArray()
 
