@@ -1,6 +1,7 @@
 //Recycler View adapters
 package com.freefriday.hillo
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,6 +43,7 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
 }
 
 class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<TimetableRVAdapter.RVHolder>(){
+    var context: Context? = null
     class RVHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text_time = itemView.findViewById<TextView>(R.id.recycler_timetable)
         val btn_remove = itemView.findViewById<Button>(R.id.recycler_timedel)
@@ -52,6 +54,7 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RVHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recycler_time_content, parent, false)
+        if(context == null)context = parent.context
         return RVHolder(view)
     }
 
@@ -63,6 +66,7 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
     }
 
     fun deleteData(pos: Int){
+        deleteTable(context!!, data!![pos],{})
         data?.removeAt(pos)
         this.notifyItemRemoved(pos)
         this.notifyItemRangeChanged(pos, itemCount)

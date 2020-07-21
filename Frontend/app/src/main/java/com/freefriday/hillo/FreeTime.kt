@@ -22,7 +22,7 @@ data class Timepair(
         return "${if(h>12){h-12}else{h}}:${"%02d".format(m)} $pm"
     }
     override fun toString(): String {
-        return "$day ${timeformat(start)}~${timeformat(end)}"
+        return "${TimeFrag.day2kor(str2date(day)!!)} ${timeformat(start)}~${timeformat(end)}"
     }
 }
 

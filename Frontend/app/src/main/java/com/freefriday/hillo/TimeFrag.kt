@@ -92,14 +92,20 @@ class TimeFrag : Fragment() {
 
         //Get all time from time table DB
         getallTable(applicationContext, timelist,{
+            timelist.sortBy { it.day.num*2400+it.start }
             activity?.runOnUiThread {timervadapter.notifyDataSetChanged()}
         })
 
         //function for adding time
         fun addtext(time:TimeTable){
             timelist.add(time)
+            timelist.sortBy { it.day.num*2400+it.start }
+            val pos = timelist.indexOf(time)
             insertTable(applicationContext, time, {})
-            activity?.runOnUiThread {timervadapter.notifyDataSetChanged()}
+            activity?.runOnUiThread {
+                timervadapter.notifyItemInserted(pos)
+                timervadapter.notifyItemRangeChanged(pos, timervadapter.itemCount)
+            }
         }
 
         //number picker value to integer time value
