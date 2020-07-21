@@ -20,7 +20,16 @@ val baseURL = "http://10.0.2.2:5000"
 var myid:Long? = null
 //Recycler View Adapter used for recommendation fragment
 val recrvadapter: FreetimeRVAdapter by lazy{ FreetimeRVAdapter(null)}
+//Recycler View Adapter used for time table fragment
 val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
+//lambda for parsing free time
+val doparse : (Response<String>)->Unit = {
+    val parsed = getJsonParse<FreetimeArray>(it)
+    recrvadapter.data = parsed.toFreetime()
+    Log.i("DEBUGMSG", "data:")
+    Log.i("DEBUGMSG", recrvadapter.data.toString())
+    recrvadapter.notifyDataSetChanged()
+}
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,11 +90,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
 
                 myid = result?.id
-                val doparse : (Response<String>)->Unit = {
-                    val parsed = getJsonParse<FreetimeArray>(it)
-                    recrvadapter.data = parsed.toFreetime()
-                    recrvadapter.notifyDataSetChanged()
-                }
+
                 RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass(
                     doparse))
                 RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparse))

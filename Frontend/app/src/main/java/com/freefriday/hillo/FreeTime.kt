@@ -19,7 +19,7 @@ data class Timepair(
         val h = time/100
         val pm = if(h>=12){"PM"}else{"AM"}
         val m = time%100
-        return "$h:${"%02d".format(m)} $pm"
+        return "${if(h>12){h-12}else{h}}:${"%02d".format(m)} $pm"
     }
     override fun toString(): String {
         return "$day ${timeformat(start)}~${timeformat(end)}"
