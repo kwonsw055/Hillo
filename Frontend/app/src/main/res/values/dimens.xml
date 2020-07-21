@@ -7,4 +7,5 @@
     <dimen name="recycler_content_image_size">70dp</dimen>
     <dimen name="recylcer_content_image_margin">15dp</dimen>
     <dimen name="recycler_font_size">16sp</dimen>
+    <dimen name="recycler_content_half_height">50dp</dimen>
 </resources>

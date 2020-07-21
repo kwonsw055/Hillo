@@ -2,42 +2,25 @@
 //Will start up with recommendation fragment
 package com.freefriday.hillo
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
 import android.widget.*
-import androidx.browser.browseractions.BrowserActionsIntent
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.GsonBuilder
-import com.google.gson.annotations.SerializedName
 import com.kakao.auth.*
 import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
 import com.kakao.usermgmt.callback.MeV2ResponseCallback
 import com.kakao.usermgmt.response.MeV2Response
-import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
-import java.lang.StringBuilder
 
 //HTTP URL for server
 val baseURL = "http://10.0.2.2:5000"
 //User kakao id
 var myid:Long? = null
 //Recycler View Adapter used for recommendation fragment
-val rvadapter: RVAdapter by lazy{ RVAdapter(null)}
+val recrvadapter: FreetimeRVAdapter by lazy{ FreetimeRVAdapter(null)}
+val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,8 +83,8 @@ class MainActivity : AppCompatActivity() {
                 myid = result?.id
                 val doparse : (Response<String>)->Unit = {
                     val parsed = getJsonParse<FreetimeArray>(it)
-                    rvadapter.data = parsed.toFreetime()
-                    rvadapter.notifyDataSetChanged()
+                    recrvadapter.data = parsed.toFreetime()
+                    recrvadapter.notifyDataSetChanged()
                 }
                 RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass(
                     doparse))

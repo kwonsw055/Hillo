@@ -20,7 +20,7 @@ class RecFrag : Fragment() {
         val recycler = constlayout.findViewById<RecyclerView>(R.id.rv_view)
         recycler.setHasFixedSize(true)
         recycler.layoutManager = LinearLayoutManager(inflater.context)
-        recycler.adapter = rvadapter
+        recycler.adapter = recrvadapter
         return constlayout
     }
 }

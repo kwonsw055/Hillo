@@ -24,7 +24,17 @@ class TimeTable(
     @ColumnInfo(name = TimeTableDay)var day: Date,
     @ColumnInfo(name = TimeTableStart)var start:Int,
     @ColumnInfo(name = TimeTableEnd)var end:Int
-)
+){
+    fun timeformat(time: Int):String{
+        val h = time/100
+        val pm = if(h>=12){"PM"}else{"AM"}
+        val m = time%100
+        return "${if(h>12){h-12}else{h}}:${"%02d".format(m)} $pm"
+    }
+    override fun toString(): String {
+        return "${TimeFrag.day2kor(day)} ${timeformat(start)}~${timeformat(end)}"
+    }
+}
 
 //DAO for time table
 @Dao

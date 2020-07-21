@@ -22,20 +22,34 @@
             android:id="@+id/num_day"
             android:layout_width="40dp"
             android:layout_height="match_parent"
+            android:layout_marginRight="0.5dp"
             android:layout_weight="1"
+            android:background="#FFFFFF"
             android:clickable="false" />
 
         <NumberPicker
             android:id="@+id/num_start"
             android:layout_width="70dp"
             android:layout_height="match_parent"
+            android:layout_marginLeft="0.5dp"
+            android:background="#FFFFFF"
             android:clickable="false" />
+
+        <TextView
+            android:id="@+id/text_sq"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="~" />
 
         <NumberPicker
             android:id="@+id/num_end"
             android:layout_width="70dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="#FFFFFF"
             android:clickable="false" />
 
         <Button
@@ -49,6 +63,17 @@
         android:id="@+id/text_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rec_time"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
