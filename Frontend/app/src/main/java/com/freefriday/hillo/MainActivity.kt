@@ -46,22 +46,25 @@ class MainActivity : AppCompatActivity() {
         //Contains Fragment
         val main_frame = findViewById<FrameLayout>(R.id.main_frame)
 
+        val title = findViewById<TextView>(R.id.title_text)
+
         //Lambda function for switching fragments
         //Not using backstack.
         val changeFrag = {
-            frag : Fragment->
+            frag : Fragment, titlestr:String->
             val transaction = supportFragmentManager?.beginTransaction()
             transaction.replace(R.id.rec_frag, frag)
             transaction.commit()
+            title.text = titlestr
         }
 
         //Set recommendation button to switch fragments
         btn_rec.setOnClickListener {
-            changeFrag(RecFrag())
+            changeFrag(RecFrag(), getString(R.string.title_rec))
         }
         //Set my time table button to switch fragments
         btn_my.setOnClickListener {
-            changeFrag(TimeFrag())
+            changeFrag(TimeFrag(), getString(R.string.title_time))
         }
 
         //Instantiated using KakaoAdapter
