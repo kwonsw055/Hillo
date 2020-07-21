@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/recycler_content_height"
     android:animationCache="false"
-    android:background="#8C8C8C">
+    android:background="#00FFFFFF">
 
     <ImageView
         android:id="@+id/recycler_image"
@@ -13,7 +13,7 @@
         android:layout_height="@dimen/recycler_content_image_size"
         android:layout_marginStart="15dp"
         android:layout_marginLeft="@dimen/recylcer_content_image_margin"
-        android:background="#FF0000"
+        android:background="#00FFFFFF"
         android:cropToPadding="true"
         android:foreground="@android:drawable/ic_menu_call"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -22,7 +22,7 @@
         tools:srcCompat="@tools:sample/avatars" />
 
     <Button
-        android:id="@+id/recycler_start"
+        android:id="@+id/recycler_recstart"
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
@@ -33,7 +33,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/recycler_delete"
+        android:id="@+id/recycler_recdel"
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -46,7 +46,7 @@
     <LinearLayout
         android:id="@+id/recycler_text_layout"
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="match_parent"
         android:layout_marginStart="4dp"
         android:layout_marginLeft="4dp"
         android:gravity="center_vertical"
@@ -59,7 +59,7 @@
             android:id="@+id/recycler_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_marginLeft="10dp"
             android:text="홍길동"
             android:textSize="@dimen/recycler_font_size" />
 
@@ -67,7 +67,8 @@
             android:id="@+id/recycler_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="5dp"
             android:text="3:00PM(월)"
             android:textSize="@dimen/recycler_font_size" />
 

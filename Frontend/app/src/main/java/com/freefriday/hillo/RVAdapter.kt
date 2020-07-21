@@ -10,10 +10,12 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 
-class FreetimeRVAdapter(var data:Array<Freetime>?) : RecyclerView.Adapter<FreetimeRVAdapter.RVHolder>() {
+class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<FreetimeRVAdapter.RVHolder>() {
     class RVHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text_name = itemView.findViewById<TextView>(R.id.recycler_name)
         val text_time = itemView.findViewById<TextView>(R.id.recycler_time)
+        val btn_start = itemView.findViewById<Button>(R.id.recycler_recstart)
+        val btn_del = itemView.findViewById<Button>(R.id.recycler_recdel)
         fun setText(name: String, time: Timepair){
             text_name.text = name
             text_time.text = time.toString()
@@ -29,6 +31,13 @@ class FreetimeRVAdapter(var data:Array<Freetime>?) : RecyclerView.Adapter<Freeti
 
     override fun onBindViewHolder(holder: RVHolder, position: Int) {
         holder.setText(data!![position].id.toString(), data!![position].time)
+        holder.btn_del.setOnClickListener { deleteData(position) }
+    }
+
+    fun deleteData(pos: Int){
+        data?.removeAt(pos)
+        this.notifyItemRemoved(pos)
+        this.notifyItemRangeChanged(pos, itemCount)
     }
 }
 
@@ -56,5 +65,6 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
     fun deleteData(pos: Int){
         data?.removeAt(pos)
         this.notifyItemRemoved(pos)
+        this.notifyItemRangeChanged(pos, itemCount)
     }
 }

@@ -64,12 +64,12 @@ data class FreetimeArray(
         }
         return str.toString()
     }
-    fun toFreetime():Array<Freetime>{
+    fun toFreetime():MutableList<Freetime>{
         val res = mutableListOf<Freetime>()
         result.forEach {
             it.toFreetime().forEach { t->res.add(t) }
         }
-        return res.toTypedArray()
+        return res
     }
 }
 
