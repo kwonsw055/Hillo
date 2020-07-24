@@ -1,5 +1,8 @@
 from flask import Flask, jsonify, request
 import pymysql
+import threading
+
+sema_freetable = threading.Semaphore()
 
 #Flask init
 app = Flask(__name__)
@@ -221,7 +224,11 @@ def testsett():
         return error_msg["day_time_mis"]
     freetime = list(zip(day, start, end))
     print(freetime)
-    return insert_freetime(id, freetime)
+    sema_freetable.acquire()
+    query(f"delete from {freetable} where id={id}")
+    res = insert_freetime(id, freetime)
+    sema_freetable.release()
+    return res
 
 #Get matching freetime with friends
 @app.route("/test-getft",methods=["GET"])
@@ -232,8 +239,9 @@ def testgetf():
     find = query(f"select * from {usertable} where {user_id}={id}")
     if len(find)==0:
         return error_msg["id_none"]
+    sema_freetable.acquire()
     mytime = query(f"select * from {freetable} where {user_id}={id}")
-    print(mytime)
+    sema_freetable.release()
     result = []
     if len(mytime)==0:
         return jsonify({"result":result})
@@ -242,7 +250,9 @@ def testgetf():
         mytimelist.append((my[free_day], my[start_time], my[end_time]))
     friendlist = query(f"select {friend_id} from {friendtable} where {user_id}={id}")
     for fid in friendlist:
+        sema_freetable.acquire()
         ftime = query(f"select * from {freetable} where {user_id}={fid[friend_id]}")
+        sema_freetable.release()
         ftimelist = []
         for f in ftime:
             ftimelist.append((f[free_day], f[start_time], f[end_time]))
