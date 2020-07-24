@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         val main_frame = findViewById<FrameLayout>(R.id.main_frame)
 
         val title = findViewById<TextView>(R.id.title_text)
-
         //Lambda function for switching fragments
         //Not using backstack.
         val changeFrag = {
@@ -58,13 +57,17 @@ class MainActivity : AppCompatActivity() {
             title.text = titlestr
         }
 
+        val recfrag: RecFrag by lazy{RecFrag()}
+
         //Set recommendation button to switch fragments
         btn_rec.setOnClickListener {
-            changeFrag(RecFrag(), getString(R.string.title_rec))
+            changeFrag(recfrag, getString(R.string.title_rec))
         }
+
+        val timefrag: TimeFrag by lazy { TimeFrag() }
         //Set my time table button to switch fragments
         btn_my.setOnClickListener {
-            changeFrag(TimeFrag(), getString(R.string.title_time))
+            changeFrag(timefrag, getString(R.string.title_time))
         }
 
         //Instantiated using KakaoAdapter
@@ -94,9 +97,11 @@ class MainActivity : AppCompatActivity() {
 
                 myid = result?.id
 
+                /*
                 RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass(
                     doparse))
                 RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparse))
+                 */
             }
 
             override fun onSessionClosed(errorResult: ErrorResult?) {
@@ -104,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        UserManagement.getInstance()
         //Get my info
         UserManagement.getInstance().me(responseclass)
     }

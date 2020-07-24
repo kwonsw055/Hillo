@@ -6,7 +6,7 @@ import androidx.room.*
 
 //Friend table name and attributes
 const val FriendTableName = "friendtable"
-const val FriendID = "day"
+const val FriendID = "id"
 const val FriendNickname = "nickname"
 const val FriendURL = "url"
 
@@ -33,6 +33,8 @@ interface FriendDAO{
     fun getallTable():List<Friend>
     @Query("delete from "+ FriendTableName)
     fun deleteAll()
+    @Query("select * from $FriendTableName where $FriendID=:id")
+    fun get(id:Long):List<Friend>
 }
 
 //Database for friend table
@@ -65,6 +67,14 @@ fun getallFriends(context: Context, friendtablelist:MutableList<Friend>, afterex
             friendtablelist.add(it)
         }
         afterexec()
+    }.start()
+}
+
+//Do select with id query.
+fun getFriend(context: Context, id:Long, afterexec: (Friend?) -> Unit){
+    Thread{
+        val res = FriendDB.getinst(context)?.FriendDAO()?.get(id)
+        afterexec(if(res?.size!!>0){res?.get(0)}else{null})
     }.start()
 }
 

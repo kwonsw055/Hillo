@@ -32,9 +32,24 @@ class RecFrag : Fragment() {
             doparse(it)
             swipe.isRefreshing = false
         }
-        swipe.setOnRefreshListener {
-            RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparseAndstop))
+
+        //function for refreshing
+        fun refresh(){
+            Thread{
+                //wait for myid to be valid
+                while(myid==null){;}
+                //do parse and stop
+                RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparseAndstop))
+            }.start()
         }
+
+        swipe.setOnRefreshListener {
+            refresh()
+        }
+
+        //initial refresh
+        swipe.isRefreshing = true
+        refresh()
         return constlayout
     }
 }
