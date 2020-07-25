@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<FreetimeRVAdapter.RVHolder>() {
     lateinit var context: Context
+    val cache:MutableMap<Long, String> = mutableMapOf()
     class RVHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text_name = itemView.findViewById<TextView>(R.id.recycler_name)
         val text_time = itemView.findViewById<TextView>(R.id.recycler_time)
@@ -34,12 +35,16 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
     override fun getItemCount(): Int = data?.size ?: 0
 
     override fun onBindViewHolder(holder: RVHolder, position: Int) {
-        getFriend(context, data!![position].id,{f:Friend?->
-            (context as Activity).runOnUiThread{
-                if(data!!.size>position)
-                holder.setText(f?.nickname?:context.getString(R.string.name_unknown), data!![position].time)
-            }
-        })
+        if(!cache.containsKey(data!![position].id)){
+            getFriend(context, data!![position].id,{f:Friend?->
+                (context as Activity).runOnUiThread{
+                    if(data!!.size>position){
+                        cache[data!![position].id] = f?.nickname?:context.getString(R.string.name_unknown)
+                    }
+                }
+            })
+        }
+        holder.setText(cache[data!![position].id], data!![position].time)
         holder.btn_del.setOnClickListener { deleteData(position) }
     }
 
