@@ -15,7 +15,6 @@
         android:layout_marginLeft="@dimen/recylcer_content_image_margin"
         android:background="#00FFFFFF"
         android:cropToPadding="true"
-        android:foreground="@android:drawable/ic_menu_call"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
