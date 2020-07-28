@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 import pymysql
 import threading
+import queue
 
 sema_freetable = threading.Semaphore()
 
@@ -30,6 +31,7 @@ error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_day":("Error: No Day Provided", 400),
              "no_start":("Error: No Start time Provided", 400),
              "no_end":("Error: No End time Provided", 400),
+             "no_session":("Error: No session Provided", 400),
              "day_time_mis":("Error: Day and Time list mismatch", 400),
              "id_dup":("Error: Duplicate ID", 400),
              "id_none":("Error: Non existing ID", 400),
@@ -38,8 +40,10 @@ error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "rel_exist":("Error: Already Friend", 400),
              "date_wrong":("Error: Date out of bounds", 400),
              "time_wrong":("Error: Time out of bounds", 400),
+             "session_none":("Error: Session not available", 400),
              "insert_fail":("Error: Insert Failed", 500),
-             "db_down":("Error: DB Server Down", 500)}
+             "db_down":("Error: DB Server Down", 500),
+             "session_full":("Error: Too many sessions", 500)}
 
 #Make a query to DB Server
 #Returns query result
@@ -259,3 +263,102 @@ def testgetf():
         inter = getinter(mytimelist, ftimelist)
         if len(inter)>0: result.append({"fid":fid[friend_id], "times":inter})
     return jsonify({"result":result})
+
+#Max number of sessions
+maxsession = 2
+#Sessions list. Each session is a list of (id, ip)
+sessions = []
+#Available sessions number queue.
+available = queue.Queue()
+#Semaphores for accessing sessions
+sema_sessions = []
+#Semaphore for accessing available queue.
+sema_available = threading.Semaphore()
+#Initialize sessions and semaphores
+for i in range(0,maxsession):
+    available.put(i)
+    sessions.append([])
+    sema_sessions.append(threading.Semaphore())
+
+#Make meeting session
+@app.route("/test-make",methods=["GET"])
+def testmake():
+    id = request.args.get("id")
+    if id is None:
+        return error_msg["no_id"]
+    if available.empty():
+        return error_msg["session_full"]
+    sema_available.acquire()
+    session = available.get()
+    sema_available.release()
+    sema_sessions[session].acquire()
+    sessions[session].clear()
+    sessions[session].append((id, request.remote_addr))
+    sema_sessions[session].release()
+    return jsonify({"session":session})
+
+#Join session
+@app.route("/test-join",methods=["POST"])
+def testjoin():
+    id = request.args.get("id")
+    if id is None:
+        return error_msg["no_id"]
+    session = request.args.get("session")
+    if session is None:
+        return error_msg["no_session"]
+    session = eval(session)
+    sema_sessions[session].acquire()
+    if len(sessions[session]) == 0:
+        sema_sessions[session].release()
+        return error_msg["session_none"]
+    sessions[session].append((id, request.remote_addr))
+    sema_sessions[session].release()
+    printall()
+    return "Done"
+
+#End session
+@app.route("/test-end",methods=["POST"])
+def testend():
+    session = request.args.get("session")
+    if session is None:
+        return error_msg["no_session"]
+    session = eval(session)
+    sema_sessions[session].acquire()
+    if len(sessions[session]) == 0:
+        sema_sessions[session].release()
+        return error_msg["session_none"]
+    freetimes = []
+    for id, ip in sessions[session]:
+        sema_freetable.acquire()
+        freelist = query(f"select * from {freetable} where {user_id}={id}")
+        sema_freetable.release()
+        freetime = []
+        for ft in freelist:
+            freetime.append((ft[free_day], ft[start_time], ft[end_time]))
+        freetimes.append(freetime)
+    sessions[session].clear()
+    sema_sessions[session].release()
+    sema_available.acquire()
+    available.put(session)
+    sema_available.release()
+    temp = freetimes[0]
+    if len(freetimes) == 1:
+        return jsonify(temp)
+    for ft in freetimes[1:]:
+        inter = getinter(temp, ft)
+        temp = convertinter(inter)
+    return jsonify(temp)
+
+#Convert getinter result into list of tuples
+def convertinter(inter):
+    result = []
+    for i in inter:
+        result.append((i["day"], i["start"], i["end"]))
+    return result
+
+#For debug
+def printall():
+    for i, s in enumerate(sessions):
+        if len(s)>0:
+            print(i)
+            print(s)
