@@ -12,7 +12,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".addtable"></activity>
+
+        <activity android:name=".JoinActivity">
+            <intent-filter>
+                <data
+                    android:host="kakaolink"
+                    android:scheme="kakao417de9aa9d17c3c43a5f7a50fae8f965" />
+
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+        </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

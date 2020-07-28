@@ -2,12 +2,17 @@
 //Will start up with recommendation fragment
 package com.freefriday.hillo
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
 import androidx.fragment.app.Fragment
 import com.kakao.auth.*
+import com.kakao.kakaolink.v2.KakaoLinkService
+import com.kakao.message.template.ButtonObject
+import com.kakao.message.template.LinkObject
+import com.kakao.message.template.TextTemplate
 import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
 import com.kakao.usermgmt.callback.MeV2ResponseCallback
@@ -70,6 +75,11 @@ class MainActivity : AppCompatActivity() {
             changeFrag(timefrag, getString(R.string.title_time))
         }
 
+        val makeFrag: MakeFrag by lazy{MakeFrag()}
+        btn_frn.setOnClickListener {
+            changeFrag(makeFrag, getString(R.string.title_make))
+        }
+
         //Instantiated using KakaoAdapter
         //Used for initialization
         val inst = object: KakaoAdapter(){
@@ -106,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSessionClosed(errorResult: ErrorResult?) {
                 Log.i("DEBUGMSG","Session closing")
+                startActivity(Intent(applicationContext, LoginActivity::class.java))
             }
         }
 

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import retrofit2.Response
+import java.util.*
 
 class RecFrag : Fragment() {
     override fun onCreateView(
@@ -36,6 +37,11 @@ class RecFrag : Fragment() {
         //function for refreshing
         fun refresh(){
             Thread{
+                Timer().schedule(object : TimerTask(){
+                    override fun run() {
+                        swipe.isRefreshing = false
+                    }
+                },10000)
                 //wait for myid to be valid
                 while(myid==null){;}
                 //do parse and stop

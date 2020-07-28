@@ -79,4 +79,12 @@ interface Rinter{
     //Get user free time recommendations
     @GET("test-getft")
     fun getfreetime(@Query("id") id:Long?): Call<String>
+
+    //Make Session
+    @GET("test-make")
+    fun makesession(@Query("id") id:Long?): Call<String>
+
+    //Join Session
+    @POST("test-join")
+    fun joinsession(@Query("id") id:Long?, @Query("session") session:Long?): Call<String>
 }
