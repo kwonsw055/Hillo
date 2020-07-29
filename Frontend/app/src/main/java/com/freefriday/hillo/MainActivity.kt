@@ -25,12 +25,16 @@ import retrofit2.Response
 
 //HTTP URL for server
 val baseURL = "http://10.0.2.2:5000"
+
 //User kakao id
 var myid:Long? = null
+
 //Recycler View Adapter used for recommendation fragment
 val recrvadapter: FreetimeRVAdapter by lazy{ FreetimeRVAdapter(null)}
+
 //Recycler View Adapter used for time table fragment
 val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
+
 //lambda for parsing free time
 val doparse : (Response<String>)->Unit = {
     val parsed = getJsonParse<FreetimeArray>(it)
@@ -39,12 +43,17 @@ val doparse : (Response<String>)->Unit = {
     Log.i("DEBUGMSG", recrvadapter.data.toString())
     recrvadapter.notifyDataSetChanged()
 }
+
+//Overlapping view for login button
 var loginview : View? = null
+
+//Layout of main constraint layout
 lateinit var main : ConstraintLayout
+
+//Layout inflater
 lateinit var lInflater: LayoutInflater
 
 class MainActivity : AppCompatActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,18 +61,29 @@ class MainActivity : AppCompatActivity() {
 
         //Button for recommendation fragment
         val btn_rec = findViewById<Button>(R.id.btn_rec)
+
         //Button for my time table fragment
         val btn_my = findViewById<Button>(R.id.btn_my)
+
         //Button for friend list fragment
         val btn_frn = findViewById<Button>(R.id.btn_frn)
+
         //Button for option list
         val btn_opt = findViewById<Button>(R.id.btn_opt)
+
         //Frame layout for main frame
         //Contains Fragment
         val main_frame = findViewById<FrameLayout>(R.id.main_frame)
+
+        //initialize main constraint layout
         main = findViewById<ConstraintLayout>(R.id.cl)
-        val title = findViewById<TextView>(R.id.title_text)
+
+        //initialize layoutinflater
         lInflater = layoutInflater
+
+        //Text View for title string
+        val title = findViewById<TextView>(R.id.title_text)
+
         //Lambda function for switching fragments
         //Not using backstack.
         val changeFrag = {
@@ -75,7 +95,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         val recfrag: RecFrag by lazy{RecFrag()}
-
         //Set recommendation button to switch fragments
         btn_rec.setOnClickListener {
             changeFrag(recfrag, getString(R.string.title_rec))
@@ -88,10 +107,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         val makeFrag: MakeFrag by lazy{MakeFrag()}
+        //Set make appointment button to switch fragments
         btn_frn.setOnClickListener {
             changeFrag(makeFrag, getString(R.string.title_make))
         }
-
 
         //Instantiated using KakaoAdapter
         //Used for initialization
@@ -110,11 +129,12 @@ class MainActivity : AppCompatActivity() {
         }catch (e:KakaoSDK.AlreadyInitializedException){
         }
 
-        //Get my info
+        //Try getting my info
         UserManagement.getInstance().me(KakaoResponseClass())
     }
 
     override fun onBackPressed() {
+        //When login button is shown, intercept backpress
         if(loginview == null) super.onBackPressed()
         else{
             main.removeView(loginview)
@@ -123,15 +143,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        //When login is done
         Log.i("DEBUGMSG", "Result Returned")
         if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
+            //Delete login button
             main.removeView(loginview)
             loginview = null
+            //Retry getting my info
             UserManagement.getInstance().me(KakaoResponseClass())
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
 }
+
+//Class for retrieving my info
 class KakaoResponseClass : MeV2ResponseCallback(){
     override fun onSuccess(result: MeV2Response?) {
 
@@ -139,11 +164,14 @@ class KakaoResponseClass : MeV2ResponseCallback(){
         Log.i("DEBUGMSG", "id:" +result?.id.toString())
         Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
 
+        //initialize myid
         myid = result?.id
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {
         Log.i("DEBUGMSG","Session closed")
+
+        //Show login button to re open session
         loginview = lInflater.inflate(R.layout.activity_login, main, false)
         loginview?.setOnTouchListener { v, event ->  true}
         main.addView(loginview)

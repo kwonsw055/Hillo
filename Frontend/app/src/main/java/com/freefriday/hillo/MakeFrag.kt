@@ -26,20 +26,31 @@ class MakeFrag : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        //Root constraint layout
         val inflated = inflater.inflate(R.layout.fragment_make, container, false) as ConstraintLayout
+
+        //Button for making appointment
         val btn_make = inflated.findViewById<FloatingActionButton>(R.id.btn_make)
+
         btn_make.setOnClickListener {
             RetrofitObj.getinst().makesession(myid).enqueue(CallBackClass({
                 r: Response<String> ->
+                //Send Kakaolink message using json response
                 val response = getJsonParse<sessionresponse>(r)
                 sendMessage(response.session)
             }))
         }
         return inflated
     }
+
+    //Send Kakaolink message
     fun sendMessage(session: Long?){
         if(session != null){
-            val tempparm = TextTemplate.newBuilder(getString(R.string.msg_text),LinkObject.newBuilder().setAndroidExecutionParams("session=${session}").build()).build()
+            //Template for message
+            val tempparm = TextTemplate.newBuilder(getString(R.string.msg_text),
+                LinkObject.newBuilder().setAndroidExecutionParams("session=${session}").build()).build()
+
+            //Send message
             activity.run {
                 KakaoLinkService.getInstance().sendDefault(activity, tempparm, msgCallback())
             }
@@ -47,6 +58,7 @@ class MakeFrag : Fragment() {
     }
 }
 
+//Class for Kakao Link Response
 class msgCallback : ResponseCallback<KakaoLinkResponse>() {
     override fun onSuccess(result: KakaoLinkResponse?) {
         Log.i("DEBUGMSG", result.toString())
@@ -57,6 +69,7 @@ class msgCallback : ResponseCallback<KakaoLinkResponse>() {
     }
 }
 
+//Used for parsing Long type json response
 data class sessionresponse(
     @SerializedName("session")
     val session: Long?

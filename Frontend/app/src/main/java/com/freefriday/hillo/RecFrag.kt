@@ -20,15 +20,21 @@ class RecFrag : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        //set recycler view
+        //Root constraint layout
         val constlayout = inflater.inflate(R.layout.fragment_rec, container, false) as ConstraintLayout
+
+        //Main Recycler View
         val recycler = constlayout.findViewById<RecyclerView>(R.id.rv_view)
+
+        //Set recycler view
         recycler.setHasFixedSize(true)
         recycler.layoutManager = LinearLayoutManager(inflater.context)
         recycler.adapter = recrvadapter
 
         //set swipe refresh
         val swipe = constlayout.findViewById<SwipeRefreshLayout>(R.id.swipe_rec)
+
+        //lambda for parsing and stopping refresher
         val doparseAndstop: (Response<String>)->Unit = {
             doparse(it)
             swipe.isRefreshing = false
@@ -37,13 +43,16 @@ class RecFrag : Fragment() {
         //function for refreshing
         fun refresh(){
             Thread{
+                //Timeout after 10sec
                 Timer().schedule(object : TimerTask(){
                     override fun run() {
                         swipe.isRefreshing = false
                     }
                 },10000)
+
                 //wait for myid to be valid
                 while(myid==null){;}
+
                 //do parse and stop
                 RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparseAndstop))
             }.start()
@@ -56,6 +65,8 @@ class RecFrag : Fragment() {
         //initial refresh
         swipe.isRefreshing = true
         refresh()
+
+        //Return root view
         return constlayout
     }
 }

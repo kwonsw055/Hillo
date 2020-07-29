@@ -6,7 +6,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 
-//Deprecated
+//Deprecatedaddtable
 //Now using TimeFrag as fragment, instead of activity.
 /*
 class addtable : AppCompatActivity() {

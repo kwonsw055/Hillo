@@ -19,22 +19,36 @@ inline fun <reified T> getJsonParse(response: Response<String>) = GsonBuilder().
 
 //Callback Class for Http Response
 class CallBackClass: Callback<String> {
+
     //Performed if response is successful
     lateinit var afterSuccess: (Response<String>)->Unit
+
     //Performed if response is a failure
-    var afterFailure:(Throwable)->Unit = {}
+    var afterFailure:(Response<String>)->Unit = {}
+
+    //Performed if connection is a failure
+    var afterNoConnection: (Throwable)->Unit = {}
 
     //Constructors
     constructor(success: (Response<String>)->Unit){
         afterSuccess = success
     }
-    constructor(success: (Response<String>)->Unit, failure: (Throwable)->Unit){
-        CallBackClass(success)
+
+    //Add after failure in builder style
+    fun addAfterFailure(failure: (Response<String>)->Unit):CallBackClass{
         afterFailure = failure
+        return this
+    }
+
+    //Add after no connection in builder style
+    fun addAfterNoConnection(noConnection: (Throwable)->Unit): CallBackClass{
+        afterNoConnection = noConnection
+        return this
     }
 
     override fun onFailure(call: Call<String>, t: Throwable) {
         Log.i("DEBUGMSG", "mytest failed: "+t.message)
+        afterNoConnection(t)
     }
 
     override fun onResponse(call: Call<String>, response: Response<String>) {
@@ -44,6 +58,7 @@ class CallBackClass: Callback<String> {
         }
         else{
             Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody())
+            afterFailure(response)
         }
     }
 }

@@ -14,14 +14,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class TimeFrag : Fragment() {
-    //numberpicker for time input
+
+    //numberpickers for time input
     lateinit var num_day : NumberPicker
     lateinit var num_start : NumberPicker
     lateinit var num_end : NumberPicker
+
     //recycler view for showing time list
     lateinit var rec_time : RecyclerView
+
     //button for submitting
     lateinit var btn_submit : Button
+
     //list of time
     val timelist= mutableListOf<TimeTable>()
 
@@ -30,15 +34,19 @@ class TimeFrag : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         //Initiate Views
         val inflated = inflater.inflate(R.layout.fragment_addtable, container, false)
-        //text_time = inflated.findViewById<EditText>(R.id.text_time)
+
+        //initialize number pickers
         num_day = inflated.findViewById(R.id.num_day)
         num_start = inflated.findViewById(R.id.num_start)
         num_end = inflated.findViewById(R.id.num_end)
 
-        //text_list = inflated.findViewById(R.id.text_list)
+        //Initialize buttons
         btn_submit = inflated.findViewById(R.id.btn_submit)
+
+        //Application Context
         val applicationContext = inflater.context
 
         //disables keyboard input for numberpicker
@@ -49,15 +57,15 @@ class TimeFrag : Fragment() {
         }
 
         //set day picker
-        num_day.minValue = 0
-        num_day.maxValue = 6
+        num_day.minValue = 0 //MON
+        num_day.maxValue = 6 //SUN
         num_day.setFormatter { day2kor(int2date(it)!!) }
         num_day.value = 0
         disableInput(num_day)
         //for initial value showing
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_day) as EditText).filters = emptyArray()
 
-        //string formater for time pickers
+        //string formater for start/end time pickers
         val timeformater = {
             i: Int ->
             val h = i/2
@@ -72,6 +80,7 @@ class TimeFrag : Fragment() {
         num_start.setFormatter(timeformater)
         num_start.value = 18
         disableInput(num_start)
+        //for initial value showing
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_start) as EditText).filters = emptyArray()
 
         //set end time picker
@@ -81,6 +90,7 @@ class TimeFrag : Fragment() {
         num_end.setFormatter(timeformater)
         num_end.value = 20
         disableInput(num_end)
+        //for initial value showing
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_end) as EditText).filters = emptyArray()
 
         //set recycler view
