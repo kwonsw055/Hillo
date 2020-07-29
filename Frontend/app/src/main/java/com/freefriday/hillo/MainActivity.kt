@@ -6,7 +6,10 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.*
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import com.kakao.auth.*
 import com.kakao.kakaolink.v2.KakaoLinkService
@@ -17,6 +20,7 @@ import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
 import com.kakao.usermgmt.callback.MeV2ResponseCallback
 import com.kakao.usermgmt.response.MeV2Response
+import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 
 //HTTP URL for server
@@ -35,8 +39,13 @@ val doparse : (Response<String>)->Unit = {
     Log.i("DEBUGMSG", recrvadapter.data.toString())
     recrvadapter.notifyDataSetChanged()
 }
+var loginview : View? = null
+lateinit var main : ConstraintLayout
+lateinit var lInflater: LayoutInflater
 
 class MainActivity : AppCompatActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -47,11 +56,14 @@ class MainActivity : AppCompatActivity() {
         val btn_my = findViewById<Button>(R.id.btn_my)
         //Button for friend list fragment
         val btn_frn = findViewById<Button>(R.id.btn_frn)
+        //Button for option list
+        val btn_opt = findViewById<Button>(R.id.btn_opt)
         //Frame layout for main frame
         //Contains Fragment
         val main_frame = findViewById<FrameLayout>(R.id.main_frame)
-
+        main = findViewById<ConstraintLayout>(R.id.cl)
         val title = findViewById<TextView>(R.id.title_text)
+        lInflater = layoutInflater
         //Lambda function for switching fragments
         //Not using backstack.
         val changeFrag = {
@@ -80,6 +92,7 @@ class MainActivity : AppCompatActivity() {
             changeFrag(makeFrag, getString(R.string.title_make))
         }
 
+
         //Instantiated using KakaoAdapter
         //Used for initialization
         val inst = object: KakaoAdapter(){
@@ -97,32 +110,42 @@ class MainActivity : AppCompatActivity() {
         }catch (e:KakaoSDK.AlreadyInitializedException){
         }
 
-        //Instantiated for Kakao service response
-        val responseclass = object: MeV2ResponseCallback() {
-            override fun onSuccess(result: MeV2Response?) {
-
-                Log.i("DEBUGMSG","response success")
-                Log.i("DEBUGMSG", "id:" +result?.id.toString())
-                Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
-
-                myid = result?.id
-
-                /*
-                RetrofitObj.getinst().gettest(result?.id,result?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass(
-                    doparse))
-                RetrofitObj.getinst().getfreetime(myid).enqueue(CallBackClass(doparse))
-                 */
-            }
-
-            override fun onSessionClosed(errorResult: ErrorResult?) {
-                Log.i("DEBUGMSG","Session closing")
-                startActivity(Intent(applicationContext, LoginActivity::class.java))
-            }
-        }
-
-        UserManagement.getInstance()
         //Get my info
-        UserManagement.getInstance().me(responseclass)
+        UserManagement.getInstance().me(KakaoResponseClass())
     }
 
+    override fun onBackPressed() {
+        if(loginview == null) super.onBackPressed()
+        else{
+            main.removeView(loginview)
+            loginview = null
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.i("DEBUGMSG", "Result Returned")
+        if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
+            main.removeView(loginview)
+            loginview = null
+            UserManagement.getInstance().me(KakaoResponseClass())
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+}
+class KakaoResponseClass : MeV2ResponseCallback(){
+    override fun onSuccess(result: MeV2Response?) {
+
+        Log.i("DEBUGMSG","response success")
+        Log.i("DEBUGMSG", "id:" +result?.id.toString())
+        Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
+
+        myid = result?.id
+    }
+
+    override fun onSessionClosed(errorResult: ErrorResult?) {
+        Log.i("DEBUGMSG","Session closed")
+        loginview = lInflater.inflate(R.layout.activity_login, main, false)
+        loginview?.setOnTouchListener { v, event ->  true}
+        main.addView(loginview)
+    }
 }
