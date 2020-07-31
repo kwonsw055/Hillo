@@ -102,4 +102,8 @@ interface Rinter{
     //Join Session
     @POST("test-join")
     fun joinsession(@Query("id") id:Long?, @Query("session") session:Long?): Call<String>
+
+    //End session
+    @POST("test-end")
+    fun endsession(@Query("session") session:Long?): Call<String>
 }

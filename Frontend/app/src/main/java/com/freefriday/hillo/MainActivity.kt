@@ -24,7 +24,10 @@ import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 
 //HTTP URL for server
-val baseURL = "http://10.0.2.2:5000"
+val baseIP = "10.0.2.2"
+val basePort = 5000
+val tcpPort = 7000
+val baseURL = "http://${baseIP}:${basePort}"
 
 //User kakao id
 var myid:Long? = null

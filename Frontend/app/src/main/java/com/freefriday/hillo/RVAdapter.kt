@@ -159,3 +159,48 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
         this.notifyItemRangeChanged(pos, itemCount)
     }
 }
+
+//Recycler View Adapter for Timetable
+class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<JoinRVAdapter.RVHolder>(){
+
+    //Application Context
+    var context: Context? = null
+
+    //Class for Holder
+    class RVHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        //Text View for showing time
+        val text_time = itemView.findViewById<TextView>(R.id.recycler_jointime)
+
+        //Button for removing item
+        val btn_vote = itemView.findViewById<Button>(R.id.recycler_vote)
+
+        //Set time
+        fun setText(time:TimeTable){
+            text_time.text = time.toString()
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RVHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recycler_join_content, parent, false)
+        if(context == null)context = parent.context
+        return RVHolder(view)
+    }
+
+    override fun getItemCount(): Int = data?.size ?: 0
+
+    override fun onBindViewHolder(holder: RVHolder, position: Int) {
+        holder.setText(data!![position])
+        holder.btn_vote.setOnClickListener {
+
+        }
+    }
+
+    //Used for deleting an item
+    fun deleteData(pos: Int){
+        deleteTable(context!!, data!![pos],{})
+        data?.removeAt(pos)
+        this.notifyItemRemoved(pos)
+        this.notifyItemRangeChanged(pos, itemCount)
+    }
+}
