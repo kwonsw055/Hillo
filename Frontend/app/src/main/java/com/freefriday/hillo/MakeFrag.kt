@@ -40,6 +40,10 @@ class MakeFrag : Fragment() {
                 sendMessage(response.session)
             }))
         }
+
+        //Set the backstage fragment to not be touched
+        inflated.setOnTouchListener { v, event ->  true}
+
         return inflated
     }
 

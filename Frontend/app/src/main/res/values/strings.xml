@@ -13,7 +13,7 @@
     <string name="btn_vote">투표하기</string>
     <string name="title_rec">추천</string>
     <string name="title_time">내 시간표</string>
-    <string name="title_make">만남 목록</string>
+    <string name="title_make">만남 시작</string>
     <string name="title_join">가능한 시간 목록</string>
     <string name="name_unknown">(알 수 없음)</string>
     <string name="loading_name">이름 불러오는 중</string>
@@ -26,6 +26,7 @@
     <string name="status_count">현재 인원 수: %1$d 명</string>
     <string name="status_leader">세션에 참가하였습니다!\n모든 인원이 참가했다면 끝내기 버튼을 눌러주세요.</string>
     <string name="status_vote">원하는 시간에 투표해주세요!</string>
+    <string name="helper">아래 버튼을 눌러 만날 시간을 정해보세요!</string>
 
     <string name="kakao_scheme">417de9aa9d17c3c43a5f7a50fae8f965</string>
     <string name="kakaolink_host">kakaolink</string>
