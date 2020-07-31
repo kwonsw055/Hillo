@@ -160,7 +160,7 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
     }
 }
 
-//Recycler View Adapter for Timetable
+//Recycler View Adapter for Joining Activity
 class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<JoinRVAdapter.RVHolder>(){
 
     //Application Context
@@ -172,7 +172,7 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<Joi
         //Text View for showing time
         val text_time = itemView.findViewById<TextView>(R.id.recycler_jointime)
 
-        //Button for removing item
+        //Button for voting
         val btn_vote = itemView.findViewById<Button>(R.id.recycler_vote)
 
         //Set time
@@ -191,16 +191,5 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<Joi
 
     override fun onBindViewHolder(holder: RVHolder, position: Int) {
         holder.setText(data!![position])
-        holder.btn_vote.setOnClickListener {
-
-        }
-    }
-
-    //Used for deleting an item
-    fun deleteData(pos: Int){
-        deleteTable(context!!, data!![pos],{})
-        data?.removeAt(pos)
-        this.notifyItemRemoved(pos)
-        this.notifyItemRangeChanged(pos, itemCount)
     }
 }
