@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import pymysql
 import threading
 import queue
+from socket import socket
 
 sema_freetable = threading.Semaphore()
 
@@ -22,6 +23,9 @@ end_time = "end"
 
 #success message
 success_msg = "Done"
+
+#leader message
+leader_msg = "Leader"
 
 #error messages
 error_msg = {"no_parm":("Error: No Parameters Provided",400),
@@ -399,6 +403,8 @@ for i in range(0,maxsession):
     sessions.append([])
     sema_sessions.append(threading.Semaphore())
 
+tcpPort = 7000
+
 #Make meeting session
 @app.route("/test-make",methods=["GET"])
 def testmake():
@@ -448,12 +454,34 @@ def testjoin():
     if len(sessions[session]) == 0:
         sema_sessions[session].release()
         return error_msg["session_none"]
-    #Add user info
-    sessions[session].append((id, request.remote_addr))
+
+    # Add user info
+    if (id, request.remote_addr) not in sessions[session]:
+        sessions[session].append((id, request.remote_addr))
+    printall()
+    for s in (sessions[session]):
+        ip = s[1]
+        data = str(len(sessions[session])).encode()
+        print(data)
+        threading.Thread(connect(ip, data)).start()
+
     sema_sessions[session].release()
 
-    #Return done
-    return "Done"
+    # Check if user is leader
+    if (id, request.remote_addr) == sessions[session][0]:
+        return leader_msg
+
+    #If not, return done
+    return success_msg
+
+#Connect to user ip
+def connect(ip, data):
+    soc = socket()
+    print("connecting: "+ip)
+    soc.connect((ip, tcpPort))
+    print("connected: "+ip)
+    soc.sendall(data)
+    soc.close()
 
 #End session
 @app.route("/test-end",methods=["POST"])
@@ -492,15 +520,6 @@ def testend():
         #Append to result
         freetimes.append(freetime)
 
-    #Clear session
-    sessions[session].clear()
-    sema_sessions[session].release()
-
-    #Return session number
-    sema_available.acquire()
-    available.put(session)
-    sema_available.release()
-
     #Get all intersections
     temp = freetimes[0]
     if len(freetimes) == 1:
@@ -508,6 +527,26 @@ def testend():
     for ft in freetimes[1:]:
         inter = getinter(temp, ft)
         temp = convertinter(inter)
+
+    # Send result via socket
+    #for id, ip in sessions[session]:
+     #   data = str(temp).encode()
+     #   print(data)
+      #  threading.Thread(connect(ip, data, True)).start()
+
+    ip = sessions[session][0][1]
+    data = str(temp).encode()
+    print(data)
+    threading.Thread(connect(ip, data)).start()
+
+    # Clear session
+    sessions[session].clear()
+    sema_sessions[session].release()
+
+    # Return session number
+    sema_available.acquire()
+    available.put(session)
+    sema_available.release()
 
     #Return result
     return jsonify(temp)
