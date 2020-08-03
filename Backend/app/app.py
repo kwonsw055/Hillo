@@ -27,6 +27,8 @@ success_msg = "Done"
 #leader message
 leader_msg = "Leader"
 
+#
+
 #error messages
 error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_id":("Error: No ID Provided",400),
@@ -36,6 +38,7 @@ error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_start":("Error: No Start time Provided", 400),
              "no_end":("Error: No End time Provided", 400),
              "no_session":("Error: No session Provided", 400),
+             "no_item":("Error: No item Provided", 400),
              "day_time_mis":("Error: Day and Time list mismatch", 400),
              "id_dup":("Error: Duplicate ID", 400),
              "id_none":("Error: Non existing ID", 400),
@@ -388,6 +391,14 @@ maxsession = 2
 #Sessions list. Each session is a list of (id, ip)
 sessions = []
 
+#Vote list. Each session contains list of int
+votes = []
+
+#Voted user count. Each session contains int
+#-1 = user can enter
+#0 = user cannot enter, voting started
+votecounts = []
+
 #Available sessions number queue.
 available = queue.Queue()
 
@@ -402,6 +413,8 @@ for i in range(0,maxsession):
     available.put(i)
     sessions.append([])
     sema_sessions.append(threading.Semaphore())
+    votes.append([])
+    votecounts.append(-1)
 
 tcpPort = 7000
 
@@ -425,8 +438,10 @@ def testmake():
     #Lock when modifying session
     sema_sessions[session].acquire()
     sessions[session].clear()
+    votes[session].clear()
+    votecounts[session] = -1
     #Add user info
-    sessions[session].append((id, request.remote_addr))
+    sessions[session].append((id, request.remote_addr ))
     sema_sessions[session].release()
 
     #Return session number
@@ -455,6 +470,11 @@ def testjoin():
         sema_sessions[session].release()
         return error_msg["session_none"]
 
+    #Check if session is closed
+    if votecounts[session]>-1:
+        sema_sessions[session].release()
+        return error_msg["session_none"]
+
     # Add user info
     if (id, request.remote_addr) not in sessions[session]:
         sessions[session].append((id, request.remote_addr))
@@ -477,6 +497,7 @@ def testjoin():
 #Connect to user ip
 def connect(ip, data):
     soc = socket()
+    if(ip == '172.30.1.50'):ip='127.0.0.1'
     print("connecting: "+ip)
     soc.connect((ip, tcpPort))
     print("connected: "+ip)
@@ -529,24 +550,23 @@ def testend():
         temp = convertinter(inter)
 
     # Send result via socket
-    #for id, ip in sessions[session]:
-     #   data = str(temp).encode()
-     #   print(data)
-      #  threading.Thread(connect(ip, data, True)).start()
+    for id, ip in sessions[session]:
+        data = str(temp).encode()
+        print(data)
+        threading.Thread(connect(ip, data)).start()
 
-    ip = sessions[session][0][1]
-    data = str(temp).encode()
-    print(data)
-    threading.Thread(connect(ip, data)).start()
+    #Set up votes
+    for i in range(0,len(temp)):
+        votes[session].append(0)
 
-    # Clear session
-    sessions[session].clear()
+    # Open for voting
+    votecounts[session] = 0
     sema_sessions[session].release()
 
     # Return session number
-    sema_available.acquire()
-    available.put(session)
-    sema_available.release()
+    #sema_available.acquire()
+    #available.put(session)
+    #sema_available.release()
 
     #Return result
     return jsonify(temp)
@@ -564,3 +584,69 @@ def printall():
         if len(s)>0:
             print(i)
             print(s)
+
+#Check if user exists
+@app.route("/test-check", methods=["GET"])
+def testcheck():
+    # Get id
+    id = request.args.get("id")
+    if id is None:
+        return error_msg["no_id"]
+
+    #Search for user
+    res = query(f"select * from {usertable} where {user_id}={id}")
+    if res is None:
+        return error_msg["db_down"]
+    if len(res) == 0:
+        return error_msg["id_none"]
+    else:
+        return success_msg
+
+#Vote for session
+@app.route("/test-vote", methods=["POST"])
+def testvote():
+    #Get session
+    session = request.args.get("session")
+    if session is None:
+        return error_msg["no_session"]
+
+    #Convert session into int
+    session = eval(session)
+
+    #Get voted item
+    item = request.args.get("item")
+    if item is None:
+        return error_msg["no_item"]
+
+    #Convert item into int
+    item = eval(item)
+
+    sema_sessions[session].acquire()
+    votes[session][item] = votes[session][item]+1
+    votecounts[session] = votecounts[session]+1
+    for s in (sessions[session]):
+        ip = s[1]
+        data = str(votecounts[session]).encode()
+        print(data)
+        threading.Thread(connect(ip, data)).start()
+    sema_sessions[session].release()
+
+    #If everyone voted, clear session
+    if(len(sessions[session]) == votecounts[session]):
+
+        # Send result via socket
+        for id, ip in sessions[session]:
+            data = str(votes[session]).encode()
+            print(data)
+            threading.Thread(connect(ip, data)).start()
+
+        votes[session].clear()
+        votecounts[session] = -1
+        sessions[session].clear()
+
+        # Return session number
+        sema_available.acquire()
+        available.put(session)
+        sema_available.release()
+
+    return success_msg
