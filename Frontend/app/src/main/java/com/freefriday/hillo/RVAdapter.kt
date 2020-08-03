@@ -3,6 +3,7 @@ package com.freefriday.hillo
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -161,10 +162,13 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
 }
 
 //Recycler View Adapter for Joining Activity
-class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<JoinRVAdapter.RVHolder>(){
+class JoinRVAdapter(var data:MutableList<TimeTable>?, var vote:MutableList<Int>, val session: Long?, val activity: Activity) : RecyclerView.Adapter<JoinRVAdapter.RVHolder>(){
 
     //Application Context
-    var context: Context? = null
+    //var context: Context? = null
+
+    //Did user vote?
+    var voted = false
 
     //Class for Holder
     class RVHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -175,6 +179,9 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<Joi
         //Button for voting
         val btn_vote = itemView.findViewById<Button>(R.id.recycler_vote)
 
+        //Text View for vote count
+        val text_vote = itemView.findViewById<TextView>(R.id.recycler_votecount)
+
         //Set time
         fun setText(time:TimeTable){
             text_time.text = time.toString()
@@ -183,7 +190,7 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<Joi
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RVHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recycler_join_content, parent, false)
-        if(context == null)context = parent.context
+        //if(context == null)context = parent.context
         return RVHolder(view)
     }
 
@@ -191,5 +198,28 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<Joi
 
     override fun onBindViewHolder(holder: RVHolder, position: Int) {
         holder.setText(data!![position])
+        holder.text_vote.visibility = View.GONE
+
+        if(voted){
+            Log.i("DEBUGMSG", "voted true")
+            holder.btn_vote.visibility = View.GONE
+        }
+
+        if(data!!.size == vote.size){
+            Log.i("DEBUGMSG", "vote done")
+            activity.runOnUiThread{
+                holder.btn_vote.visibility = View.GONE
+                holder.text_vote.visibility = View.VISIBLE
+                holder.text_vote.text = activity.getString(R.string.vote_count, vote[position])
+            }
+        }
+
+        holder.btn_vote.setOnClickListener {
+            RetrofitObj.getinst().votesession(session, position).enqueue(CallBackClass{
+                Log.i("DEBUGMSG", "vote success")
+                voted=true
+                activity.runOnUiThread{this.notifyDataSetChanged()}
+            })
+        }
     }
 }

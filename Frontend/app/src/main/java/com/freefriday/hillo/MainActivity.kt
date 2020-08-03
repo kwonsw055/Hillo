@@ -24,7 +24,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 
 //HTTP URL for server
-val baseIP = "10.0.2.2"
+val baseIP = "172.30.1.50"
 val basePort = 5000
 val tcpPort = 7000
 val baseURL = "http://${baseIP}:${basePort}"
@@ -133,7 +133,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         //Try getting my info
-        UserManagement.getInstance().me(KakaoResponseClass())
+        UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
+            //Show login button to re open session
+            loginview = lInflater.inflate(R.layout.activity_login, main, false)
+            loginview?.setOnTouchListener { v, event ->  true}
+            main.addView(loginview)
+        })
     }
 
     override fun onBackPressed() {
@@ -161,6 +166,14 @@ class MainActivity : AppCompatActivity() {
 
 //Class for retrieving my info
 class KakaoResponseClass : MeV2ResponseCallback(){
+
+    var afterSessionClosed : (ErrorResult?)->Unit = {}
+
+    fun addAfterSessionClosed(after: (ErrorResult?)->Unit):KakaoResponseClass{
+        afterSessionClosed = after
+        return this
+    }
+
     override fun onSuccess(result: MeV2Response?) {
 
         Log.i("DEBUGMSG","response success")
@@ -174,9 +187,6 @@ class KakaoResponseClass : MeV2ResponseCallback(){
     override fun onSessionClosed(errorResult: ErrorResult?) {
         Log.i("DEBUGMSG","Session closed")
 
-        //Show login button to re open session
-        loginview = lInflater.inflate(R.layout.activity_login, main, false)
-        loginview?.setOnTouchListener { v, event ->  true}
-        main.addView(loginview)
+        afterSessionClosed(errorResult)
     }
 }

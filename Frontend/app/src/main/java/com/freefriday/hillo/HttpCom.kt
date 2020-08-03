@@ -106,4 +106,12 @@ interface Rinter{
     //End session
     @POST("test-end")
     fun endsession(@Query("session") session:Long?): Call<String>
+
+    //Check user
+    @GET("test-check")
+    fun checkuser(@Query("id") id:Long?): Call<String>
+
+    //Vote
+    @POST("test-vote")
+    fun votesession(@Query("session") session:Long?, @Query("item") item:Int?): Call<String>
 }

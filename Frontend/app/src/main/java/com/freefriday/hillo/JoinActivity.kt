@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.kakao.auth.IApplicationConfig
@@ -29,7 +30,11 @@ val serverSocket : ServerSocket by lazy{ServerSocket(tcpPort)}
 //Is network thread started?
 var netThreaded = false
 
+//Max nubmer of stages
+const val maxStage = 4
+
 class JoinActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_join)
@@ -55,8 +60,11 @@ class JoinActivity : AppCompatActivity() {
         //Result data
         var rvdata = mutableListOf<TimeTable>()
 
+        //Vote data
+        var votedata = mutableListOf<Int>()
+
         //RV Adapter for Recycler View
-        val rvadapter = JoinRVAdapter(rvdata)
+        val rvadapter = JoinRVAdapter(rvdata, votedata, session, this)
 
         //Initialize Recycler View
         rv_join.adapter = rvadapter
@@ -67,6 +75,16 @@ class JoinActivity : AppCompatActivity() {
         //Start socket Thread
         if(!netThreaded){
             Thread{
+                //current stage of listening
+                //0=Participants count
+                //1=Parse time result
+                //2=Voting count
+                //3=Parse vote result
+                var stage = 0
+
+                //Number of users in session
+                var userCount = 0
+
                 //Keep listening
                 while(true){
                     Log.i("DEBUGMSG", "socket init")
@@ -84,9 +102,6 @@ class JoinActivity : AppCompatActivity() {
                         //used when session ends
                         var str = ""
 
-                        //is str value being written?
-                        var strWrite = false
-
                         //read value
                         while(inputstream.available()>0){
 
@@ -100,13 +115,26 @@ class JoinActivity : AppCompatActivity() {
                                 //Try parsing to int
                                 //Check if data is joined user count
                                 data.toInt()
+                                if(stage == 0) userCount = data.toInt()
 
                                 Log.i("DEBUGMSG", "Is int")
 
-                                //Change joincount text
-                                this.runOnUiThread {
-                                    text_joincount.text = getString(R.string.status_count, data.toInt())
+                                //If already parsed result, goto stage 2
+                                if(stage == 1)stage = 2
+
+                                when(stage){
+                                    0->//Change joincount text
+                                        this.runOnUiThread {
+                                            text_joincount.text = getString(R.string.status_count, userCount)
+                                        }
+
+                                    2->//Change votecount text
+                                        this.runOnUiThread {
+                                            text_joincount.text = getString(R.string.status_vote_count, data.toInt(), userCount)
+                                        }
                                 }
+
+
 
                             }catch (e: Exception){
                                 //If not int type, then data is the result for available times
@@ -114,25 +142,56 @@ class JoinActivity : AppCompatActivity() {
 
                                 str = data
 
-                                strWrite = true
+                                //If first time parsing, goto stage 1
+                                if(stage == 0)stage = 1
 
-                                //Parse received data to TimeTable list
-                                rvadapter.data = parseSocketResponse(data)
+                                //If parsing voting result, goto stage 3
+                                if(stage == 2)stage = 3
 
-                                //Change UI to voting stage
-                                this.runOnUiThread {
-                                    rvadapter.notifyItemRangeChanged(0, rvadapter.itemCount-1)
+                                when(stage){
+                                    1-> {
+                                        //Parse received data to TimeTable list
+                                        rvadapter.data = parseSocketResponse(data)
 
-                                    btn_end.visibility = View.GONE
-                                    text_joincount.text = getString(R.string.status_vote)
-                                    text_status.visibility = View.GONE
+                                        //Change UI to voting stage
+                                        this.runOnUiThread {
+                                            rvadapter.notifyItemRangeChanged(
+                                                0,
+                                                rvadapter.itemCount - 1
+                                            )
+
+                                            btn_end.visibility = View.GONE
+                                            text_joincount.text = getString(R.string.status_vote)
+                                            text_status.visibility = View.GONE
+                                        }
+                                    }
+                                    3->{
+                                        //Parse voting result to list
+                                        rvadapter.vote = parseVoteResponse(data)
+
+                                        //Sort by vote count
+                                        rvadapter.data!!.sortByDescending {rvadapter.vote[rvadapter.data!!.indexOf(it)]}
+
+                                        rvadapter.vote.sortByDescending{it}
+
+                                        //Notify Recycler View Adapter
+                                        this.runOnUiThread {
+                                            rvadapter.notifyDataSetChanged()
+                                            text_joincount.text = getString(R.string.status_vote_end)
+                                            rv_join.smoothScrollToPosition(0)
+                                        }
+
+                                    }
                                 }
+
                             }
                         }
                         socket.close()
-                        //If result was received, exit thread
-                        if(strWrite){
-                            Log.i("DEBUGMSG", "str = "+str)
+
+                        //If stage is max, exit
+                        if(stage == maxStage-1){
+                            Log.i("DEBUGMSG", "exiting, stage = "+stage)
+                            netThreaded = false
                             break
                         }
                     }
@@ -168,7 +227,11 @@ class JoinActivity : AppCompatActivity() {
             }
 
             //Get myid if null
-            if(myid == null) UserManagement.getInstance().me(KakaoResponseClass())
+            if(myid == null) UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
+                //If not login info, finish
+                Toast.makeText(this, getString(R.string.toast_no_user), Toast.LENGTH_LONG).show()
+                finish()
+            })
 
             //Wait until myid is valid
             while(myid == null);
@@ -184,28 +247,42 @@ class JoinActivity : AppCompatActivity() {
                 }
             }
 
-            //Join session via http
-            RetrofitObj.getinst().joinsession(myid, session).enqueue(CallBackClass({
-                //Check if user is the leader
-                if(it.body()=="Leader"){
-                    //Set UI to leader stage
-                    btn_join.visibility = View.INVISIBLE
-                    btn_end.visibility = View.VISIBLE
-                    text_status.text = getString(R.string.status_leader)
-                }
-                //If not, set to joined stage
-                else{
-                    text_status.text = getString(R.string.status_joined)
-                }
-            }).addAfterFailure {
-                //If session is ended
-                Toast.makeText(this, getString(R.string.toast_session_ended), Toast.LENGTH_SHORT).show()
-                finish()
-            }.addAfterNoConnection {
-                //If server is down
-                Toast.makeText(this, getString(R.string.toast_server_down), Toast.LENGTH_SHORT).show()
+            //Check if user info exists
+            RetrofitObj.getinst().checkuser(myid).enqueue(CallBackClass{
+                //If user exists
+
+                //Join session via http
+                RetrofitObj.getinst().joinsession(myid, session).enqueue(CallBackClass({
+                    //Check if user is the leader
+                    if(it.body()=="Leader"){
+                        //Set UI to leader stage
+                        btn_join.visibility = View.INVISIBLE
+                        btn_end.visibility = View.VISIBLE
+                        text_status.text = getString(R.string.status_leader)
+                    }
+                    //If not, set to joined stage
+                    else{
+                        btn_end.visibility = View.INVISIBLE
+                        btn_join.visibility = View.INVISIBLE
+                        text_status.text = getString(R.string.status_joined)
+                    }
+                }).addAfterFailure {
+                    //If session is ended
+                    Toast.makeText(this, getString(R.string.toast_session_ended), Toast.LENGTH_SHORT).show()
+                    finish()
+                }.addAfterNoConnection {
+                    //If server is down
+                    Toast.makeText(this, getString(R.string.toast_server_down), Toast.LENGTH_SHORT).show()
+                    finish()
+                })
+
+            }.addAfterFailure {
+                //If user info not exists
+                Toast.makeText(this, getString(R.string.toast_no_user), Toast.LENGTH_LONG).show()
                 finish()
             })
+
+
         }
 
         //End session when button clicked
@@ -222,7 +299,7 @@ fun parseSocketResponse(str: String): MutableList<TimeTable>{
     var result = mutableListOf<TimeTable>()
 
     //Input example: [('MON', 1200, 1600), ('TUE', 1400, 2230)]
-    var matches = """'(...)', (\d{4}), (\d{4})""".toRegex().find(str)
+    var matches = """'(...)', (\d+), (\d+)""".toRegex().find(str)
 
     while(matches != null){
         //Deconstruct matched groups
@@ -230,6 +307,28 @@ fun parseSocketResponse(str: String): MutableList<TimeTable>{
 
         //Add to results and move on
         result.add(TimeTable(null, str2date(day)!!, start.toInt(), end.toInt()))
+        matches = matches.next()
+    }
+
+    //Return results
+    return result
+}
+
+//Convert received string to Int list
+fun parseVoteResponse(str: String): MutableList<Int>{
+
+    //Results
+    var result = mutableListOf<Int>()
+
+    //Input example: [0, 1, 3, 5]
+    var matches = """(\d+)""".toRegex().find(str)
+
+    while(matches != null){
+        //Deconstruct matched groups
+        val (x) = matches.destructured
+
+        //Add to results and move on
+        result.add(x.toInt())
         matches = matches.next()
     }
 
