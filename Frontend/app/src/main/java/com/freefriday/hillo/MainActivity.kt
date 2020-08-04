@@ -24,7 +24,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 
 //HTTP URL for server
-val baseIP = "172.30.1.50"
+val baseIP = "35.216.57.173"
 val basePort = 5000
 val tcpPort = 7000
 val baseURL = "http://${baseIP}:${basePort}"
