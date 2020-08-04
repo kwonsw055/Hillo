@@ -12,7 +12,12 @@ import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import com.kakao.auth.*
+import com.kakao.friends.AppFriendContext
+import com.kakao.friends.AppFriendOrder
+import com.kakao.friends.response.AppFriendsResponse
 import com.kakao.kakaolink.v2.KakaoLinkService
+import com.kakao.kakaotalk.callback.TalkResponseCallback
+import com.kakao.kakaotalk.v2.KakaoTalkService
 import com.kakao.message.template.ButtonObject
 import com.kakao.message.template.LinkObject
 import com.kakao.message.template.TextTemplate
@@ -20,11 +25,12 @@ import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
 import com.kakao.usermgmt.callback.MeV2ResponseCallback
 import com.kakao.usermgmt.response.MeV2Response
+import com.kakao.util.exception.KakaoException
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 
 //HTTP URL for server
-val baseIP = "35.216.57.173"
+val baseIP = "34.64.150.182"
 val basePort = 5000
 val tcpPort = 7000
 val baseURL = "http://${baseIP}:${basePort}"
@@ -138,7 +144,52 @@ class MainActivity : AppCompatActivity() {
             loginview = lInflater.inflate(R.layout.activity_login, main, false)
             loginview?.setOnTouchListener { v, event ->  true}
             main.addView(loginview)
+        }.addAfterSuccess {
+            RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
         })
+
+
+        val getFriendlist = {
+            val context = AppFriendContext(AppFriendOrder.NICKNAME, 0, 100, "asc")
+            val friendresponse = object : TalkResponseCallback<AppFriendsResponse>(){
+                override fun onSuccess(result: AppFriendsResponse?) {
+                    Log.i("DEBUGMSG", "get friend success")
+                    result?.friends!!.forEach{
+                        Log.i("DEBUGMSG", it.profileNickname)
+                        insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage), {})
+                        RetrofitObj.getinst().setfriend(myid, it.id).enqueue(CallBackClass{})
+                    }
+                }
+
+                override fun onNotKakaoTalkUser() {
+                }
+
+                override fun onSessionClosed(errorResult: ErrorResult?) {
+                    Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage)
+                }
+
+                override fun onFailure(errorResult: ErrorResult?) {
+                    Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage)
+                }
+            }
+
+            KakaoTalkService.getInstance().requestAppFriends(context, friendresponse)
+        }
+
+        val sessionCallback = object : ISessionCallback {
+            override fun onSessionOpenFailed(exception: KakaoException?) {
+                Log.i("DEBUGMSG", "Login Failed")
+                Log.i("DEBUGMSG", "onSessionOpenFailed: "+exception)
+            }
+
+            override fun onSessionOpened() {
+                Log.i("DEBUGMSG", "Login Success")
+                UserManagement.getInstance().me(KakaoResponseClass())
+                getFriendlist()
+            }
+        }
+
+        Session.getCurrentSession().addCallback(sessionCallback)
     }
 
     override fun onBackPressed() {
@@ -158,7 +209,14 @@ class MainActivity : AppCompatActivity() {
             main.removeView(loginview)
             loginview = null
             //Retry getting my info
-            UserManagement.getInstance().me(KakaoResponseClass())
+            UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
+                //Show login button to re open session
+                loginview = lInflater.inflate(R.layout.activity_login, main, false)
+                loginview?.setOnTouchListener { v, event ->  true}
+                main.addView(loginview)
+            }.addAfterSuccess {
+                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+            })
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -168,9 +226,15 @@ class MainActivity : AppCompatActivity() {
 class KakaoResponseClass : MeV2ResponseCallback(){
 
     var afterSessionClosed : (ErrorResult?)->Unit = {}
+    var afterSuccess : (MeV2Response?)->Unit = {}
 
     fun addAfterSessionClosed(after: (ErrorResult?)->Unit):KakaoResponseClass{
         afterSessionClosed = after
+        return this
+    }
+
+    fun addAfterSuccess(after: (MeV2Response?)->Unit):KakaoResponseClass {
+        afterSuccess = after
         return this
     }
 
@@ -182,6 +246,8 @@ class KakaoResponseClass : MeV2ResponseCallback(){
 
         //initialize myid
         myid = result?.id
+
+        afterSuccess(result)
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {

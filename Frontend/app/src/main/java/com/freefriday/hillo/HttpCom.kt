@@ -91,6 +91,10 @@ interface Rinter{
     @POST("test-sett")
     fun settime(@Body body:TimeList):Call<String>
 
+    //Set friend relation
+    @POST("test-setf")
+    fun setfriend(@Query("id") id:Long?, @Query("fid") fid:Long?): Call<String>
+
     //Get user free time recommendations
     @GET("test-getft")
     fun getfreetime(@Query("id") id:Long?): Call<String>
