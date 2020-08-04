@@ -22,6 +22,7 @@ friend_id = "f_id"
 free_day = "day"
 start_time = "start"
 end_time = "end"
+user_name = "name"
 
 #success message
 success_msg = "Done"
@@ -362,7 +363,7 @@ def testgetf():
         mytimelist.append((my[free_day], my[start_time], my[end_time]))
 
     #Get friend list
-    friendlist = query(f"select {friend_id} from {friendtable} where {user_id}={id}")
+    friendlist = query(f"select {friend_id},{user_name} from {friendtable} inner join {usertable} on {friend_id}={usertable}.{user_id} where {friendtable}.{user_id}={id}")
 
     #For each friend, get their free time
     for fid in friendlist:
@@ -380,9 +381,8 @@ def testgetf():
 
         #Get intersection of mytimelist and friend's freetimelist
         inter = getinter(mytimelist, ftimelist)
-
         #Append to result
-        if len(inter)>0: result.append({"fid":fid[friend_id], "times":inter})
+        if len(inter)>0: result.append({"fid":fid[friend_id], "name":fid[user_name],"times":inter})
 
     #Return result
     return jsonify({"result":result})
