@@ -1,3 +1,5 @@
+from typing import Optional, Callable, Any, Iterable, Mapping
+
 from flask import Flask, jsonify, request
 import pymysql
 import threading
@@ -408,6 +410,33 @@ sema_sessions = []
 #Semaphore for accessing available queue.
 sema_available = threading.Semaphore()
 
+#Available ports for socket comm.
+ports = queue.Queue()
+
+#Semaphore for accessing ports queue.
+sema_ports = threading.Semaphore()
+
+#Ports assigned for session
+givenports = []
+
+#Number of ports given to session
+portscount = []
+
+#Semaphore for accessing ports count
+sema_portcount = []
+
+#Phases of threads
+threadphases = []
+
+#Results for sessions
+sessionres = []
+
+#Base TCP Port
+tcpPort = 7000
+
+#max TCP Port
+tcpCount = 10000
+
 #Initialize sessions and semaphores
 for i in range(0,maxsession):
     available.put(i)
@@ -415,8 +444,16 @@ for i in range(0,maxsession):
     sema_sessions.append(threading.Semaphore())
     votes.append([])
     votecounts.append(-1)
+    givenports.append([])
+    sessionres.append(b"")
+    portscount.append(0)
+    sema_portcount.append(threading.Semaphore())
 
-tcpPort = 7000
+#Initialize ports
+for i in range(tcpPort, tcpCount):
+    ports.put(i)
+    threadphases.append(0)
+
 
 #Make meeting session
 @app.route("/test-make",methods=["GET"])
@@ -476,33 +513,105 @@ def testjoin():
         return error_msg["session_none"]
 
     # Add user info
-    if (id, request.remote_addr) not in sessions[session]:
-        sessions[session].append((id, request.remote_addr))
+    port = 0
+    if ((id, request.remote_addr) not in sessions[session]) or ((id, request.remote_addr) == sessions[session][0]):
+        if ((id, request.remote_addr) not in sessions[session]):
+            sessions[session].append((id, request.remote_addr))
+        # Get port
+        sema_ports.acquire()
+        port = ports.get()
+        givenports[session].append(port)
+        threading.Thread(target=ready_socket, args=(port, session)).start()
+        sema_ports.release()
+
+        sema_portcount[session].acquire()
+        portscount[session] = portscount[session]+1
+        sema_portcount[session].release()
+
     printall()
-    for s in (sessions[session]):
+
+    ###
+    """for s in (sessions[session]):
         ip = s[1]
         data = str(len(sessions[session])).encode()
         print(data)
-        threading.Thread(connect(ip, data)).start()
-
+        threading.Thread(target=connect, args=data).start()"""
+    ###
     sema_sessions[session].release()
 
     # Check if user is leader
     if (id, request.remote_addr) == sessions[session][0]:
-        return leader_msg
+        print(-port)
+        return str(-port)
 
     #If not, return done
-    return success_msg
+    print(port)
+    return str(port)
 
 #Connect to user ip
-def connect(ip, data):
-    soc = socket()
-    if(ip == '172.30.1.50'):ip='127.0.0.1'
-    print("connecting: "+ip)
-    soc.connect((ip, tcpPort))
-    print("connected: "+ip)
-    soc.sendall(data)
-    soc.close()
+#deprecated
+def connect_old(ip, data):
+    try:
+        soc = socket()
+        if(ip == '172.30.1.50'):ip='127.0.0.1'
+        print("connecting: "+ip)
+        soc.connect((ip, tcpPort))
+        print("connected: "+ip)
+        soc.sendall(data)
+        soc.close()
+    except:
+        print("connect failed: "+ip)
+
+#Open socket for user
+#Pass data as lambda
+def ready_socket(port, session):
+    with socket() as s:
+        s.bind(("0.0.0.0", port))
+        print(f"start listening port={port}")
+        s.listen(1)
+        conn, addr = s.accept()
+        print(f"accepted: addr={addr}")
+        predata = b""
+        keepon = True
+        while keepon:
+            nowdata = b""
+            # Entering phase
+            if threadphases[port-tcpPort] == 0:
+                nowdata = (str(len(sessions[session]))+"\n").encode()
+            # Time result phase
+            elif threadphases[port-tcpPort] == 1:
+                nowdata = sessionres[session]
+                threadphases[port - tcpPort] = 2
+            # Vote count phase
+            elif threadphases[port-tcpPort] == 2:
+                nowdata = (str(votecounts[session])+"\n").encode()
+            # Vote result phase
+            elif threadphases[port-tcpPort] == 3:
+                nowdata = str(votes[session]).encode()
+                keepon = False
+            #Send data
+            if predata != nowdata:
+                print(f"sending {nowdata}")
+                conn.sendall(nowdata)
+                predata = nowdata
+
+
+            if s.fileno()<0:
+                keepon = False
+
+        #Reset phase
+        threadphases[port-tcpPort] = 0
+
+        sema_portcount[session].acquire()
+        portscount[session] = portscount[session]-1
+        sema_portcount[session].release()
+
+        #Return port
+        sema_ports.acquire()
+        print(f"returning port={port}")
+        ports.put(port)
+        sema_ports.release()
+
 
 #End session
 @app.route("/test-end",methods=["POST"])
@@ -550,14 +659,21 @@ def testend():
         temp = convertinter(inter)
 
     # Send result via socket
+    # Deprecated
+    """
     for id, ip in sessions[session]:
         data = str(temp).encode()
         print(data)
-        threading.Thread(connect(ip, data)).start()
+        threading.Thread(target=connect, args=(ip, data)).start()"""
 
-    #Set up votes
-    for i in range(0,len(temp)):
+    # Set up votes
+    for i in range(0, len(temp)):
         votes[session].append(0)
+
+    # Change data and phase
+    sessionres[session] = str(temp).encode()
+    for i in givenports[session]:
+        threadphases[i-tcpPort] = 1
 
     # Open for voting
     votecounts[session] = 0
@@ -624,25 +740,35 @@ def testvote():
     sema_sessions[session].acquire()
     votes[session][item] = votes[session][item]+1
     votecounts[session] = votecounts[session]+1
+    """
     for s in (sessions[session]):
         ip = s[1]
         data = str(votecounts[session]).encode()
         print(data)
-        threading.Thread(connect(ip, data)).start()
+        threading.Thread(target=connect, args=(ip, data)).start()"""
     sema_sessions[session].release()
 
     #If everyone voted, clear session
     if(len(sessions[session]) == votecounts[session]):
 
         # Send result via socket
+        """
         for id, ip in sessions[session]:
             data = str(votes[session]).encode()
             print(data)
-            threading.Thread(connect(ip, data)).start()
+            threading.Thread(target=connect, args=(ip, data)).start()"""
+        for i in givenports[session]:
+            threadphases[i-tcpPort] = 3
+
+        # Wait until all ports are closed
+        while portscount[session] > 0 :
+            True
 
         votes[session].clear()
         votecounts[session] = -1
         sessions[session].clear()
+        givenports[session].clear()
+        sessionres[session] = b""
 
         # Return session number
         sema_available.acquire()
@@ -650,3 +776,6 @@ def testvote():
         sema_available.release()
 
     return success_msg
+
+def returnapp():
+    return app
