@@ -140,42 +140,50 @@ class MainActivity : AppCompatActivity() {
 
         //Try getting my info
         UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
-            //Show login button to re open session
+            //If failed, show login button to re open session
             loginview = lInflater.inflate(R.layout.activity_login, main, false)
             loginview?.setOnTouchListener { v, event ->  true}
             main.addView(loginview)
         }.addAfterSuccess {
+            //If success, check if my info exists in server
             RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
         })
 
-
+        //lambda for getting friends
         val getFriendlist = {
+
+            //Friend context
             val context = AppFriendContext(AppFriendOrder.NICKNAME, 0, 100, "asc")
+
+            //Response object
             val friendresponse = object : TalkResponseCallback<AppFriendsResponse>(){
                 override fun onSuccess(result: AppFriendsResponse?) {
                     Log.i("DEBUGMSG", "get friend success")
+
                     result?.friends!!.forEach{
+                        //On success
                         Log.i("DEBUGMSG", it.profileNickname)
+
+                        //Insert into DB
                         insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage), {})
+
+                        //Insert friend info into server
                         RetrofitObj.getinst().setfriend(myid, it.id).enqueue(CallBackClass{})
                     }
                 }
 
-                override fun onNotKakaoTalkUser() {
-                }
+                override fun onNotKakaoTalkUser() {}
 
-                override fun onSessionClosed(errorResult: ErrorResult?) {
-                    Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage)
-                }
+                override fun onSessionClosed(errorResult: ErrorResult?) {Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage) }
 
-                override fun onFailure(errorResult: ErrorResult?) {
-                    Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage)
-                }
+                override fun onFailure(errorResult: ErrorResult?) { Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage) }
             }
-
-            KakaoTalkService.getInstance().requestAppFriends(context, friendresponse)
+            do{
+                KakaoTalkService.getInstance().requestAppFriends(context, friendresponse)
+            }while(context.hasNext())
         }
 
+        //Call back object for getting Kakao session
         val sessionCallback = object : ISessionCallback {
             override fun onSessionOpenFailed(exception: KakaoException?) {
                 Log.i("DEBUGMSG", "Login Failed")
@@ -185,10 +193,13 @@ class MainActivity : AppCompatActivity() {
             override fun onSessionOpened() {
                 Log.i("DEBUGMSG", "Login Success")
                 UserManagement.getInstance().me(KakaoResponseClass())
+
+                //On session opened, get friend list
                 getFriendlist()
             }
         }
 
+        //Get Kakao session
         Session.getCurrentSession().addCallback(sessionCallback)
     }
 
