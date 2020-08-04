@@ -15,6 +15,7 @@ import com.kakao.auth.*
 import com.kakao.friends.AppFriendContext
 import com.kakao.friends.AppFriendOrder
 import com.kakao.friends.response.AppFriendsResponse
+import com.kakao.friends.response.model.AppFriendInfo
 import com.kakao.kakaolink.v2.KakaoLinkService
 import com.kakao.kakaotalk.callback.TalkResponseCallback
 import com.kakao.kakaotalk.v2.KakaoTalkService
@@ -146,7 +147,10 @@ class MainActivity : AppCompatActivity() {
             main.addView(loginview)
         }.addAfterSuccess {
             //If success, check if my info exists in server
-            RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
+                r: Response<String>->
+                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+            })
         })
 
         //lambda for getting friends
@@ -162,13 +166,19 @@ class MainActivity : AppCompatActivity() {
 
                     result?.friends!!.forEach{
                         //On success
-                        Log.i("DEBUGMSG", it.profileNickname)
+                        info: AppFriendInfo ->
+                        Log.i("DEBUGMSG", info.profileNickname)
 
-                        //Insert into DB
-                        insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage), {})
+                        //Check if friend exists
+                        getFriend(applicationContext, info.id, {
+                            //Insert into DB
+                            if(it == null){
+                                insertFriend(applicationContext, Friend(info.id, info.profileNickname, info.profileThumbnailImage), {})
+                            }
+                        })
 
                         //Insert friend info into server
-                        RetrofitObj.getinst().setfriend(myid, it.id).enqueue(CallBackClass{})
+                        RetrofitObj.getinst().setfriend(myid, info.id).enqueue(CallBackClass{})
                     }
                 }
 
