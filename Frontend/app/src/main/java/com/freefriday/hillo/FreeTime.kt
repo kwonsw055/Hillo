@@ -30,11 +30,13 @@ data class Timepair(
 //Used for parsing Json response of 'get freetime recommendations'
 data class FreetimeJson(
     @SerializedName("fid") val fid:Long,
+    @SerializedName("name") val name:String,
     @SerializedName("times") val times:Array<Timepair>
 ){
     override fun toString(): String {
         val str = StringBuilder()
         str.append("fid=$fid\n")
+        str.append("name=$name\n")
         times.forEach {
             str.append(it.toString())
             str.append("\n")
@@ -44,7 +46,7 @@ data class FreetimeJson(
     fun toFreetime():Array<Freetime>{
         val res = mutableListOf<Freetime>()
         times.forEach {
-            res.add(Freetime(fid, it))
+            res.add(Freetime(fid, name, it))
         }
         return res.toTypedArray()
     }
@@ -76,6 +78,7 @@ data class FreetimeArray(
 //data class for friend ID & time pair
 data class Freetime(
     val id: Long,
+    val name: String,
     val time: Timepair
 )
 

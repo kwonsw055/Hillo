@@ -90,7 +90,7 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
                 (context as Activity).runOnUiThread{
                     if(data!!.size>position){
                         //Set cache
-                        namecache[data!![position].id] = f?.nickname?:context.getString(R.string.name_unknown)
+                        namecache[data!![position].id] = f?.nickname?: (data!![position].name)
                         urlcache[data!![position].id] = f?.url
 
                         //Set holder text and image
