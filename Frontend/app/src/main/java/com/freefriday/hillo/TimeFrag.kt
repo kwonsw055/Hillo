@@ -172,6 +172,10 @@ class TimeFrag : Fragment() {
             //Post free time
             RetrofitObj.getinst().settime(TimeList(id, day, start, end)).enqueue(CallBackClass{
                 Log.i("DEBUGMSG", it.toString())
+                Toast.makeText(appContext, "Timetable upload success", Toast.LENGTH_SHORT).show()
+            }.addAfterFailure {
+                Toast.makeText(appContext, "Timetable upload failure", Toast.LENGTH_SHORT).show()
+                Toast.makeText(appContext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
             })
         }
     }

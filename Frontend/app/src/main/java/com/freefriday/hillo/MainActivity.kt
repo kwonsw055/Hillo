@@ -5,6 +5,7 @@ package com.freefriday.hillo
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.kakao.auth.*
 import com.kakao.auth.network.response.AccessTokenInfoResponse
@@ -54,6 +56,8 @@ val recrvadapter: FreetimeRVAdapter by lazy{ FreetimeRVAdapter(null)}
 //Recycler View Adapter used for time table fragment
 val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
 
+lateinit var appContext : Context
+
 //lambda for parsing free time
 val doparse : (Response<String>)->Unit = {
     val parsed = getJsonParse<FreetimeArray>(it)
@@ -75,20 +79,21 @@ lateinit var lInflater: LayoutInflater
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        appContext = applicationContext
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.i("DEBUGMSG", getHashKey(this))
         //Button for recommendation fragment
-        val btn_rec = findViewById<Button>(R.id.btn_rec)
+        val btn_rec = findViewById<ImageButton>(R.id.img_rec)
 
         //Button for my time table fragment
-        val btn_my = findViewById<Button>(R.id.btn_my)
+        val btn_my = findViewById<ImageButton>(R.id.img_my)
 
         //Button for friend list fragment
-        val btn_frn = findViewById<Button>(R.id.btn_frn)
+        val btn_frn = findViewById<ImageButton>(R.id.img_frn)
 
         //Button for option list
-        val btn_opt = findViewById<Button>(R.id.btn_opt)
+        val btn_opt = findViewById<ImageButton>(R.id.img_opt)
 
         //Frame layout for main frame
         //Contains Fragment
@@ -113,22 +118,48 @@ class MainActivity : AppCompatActivity() {
             title.text = titlestr
         }
 
+        val setColor = {
+            v:View->
+
+            for(i in arrayOf(btn_frn, btn_my, btn_opt, btn_rec)){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    i.setBackgroundColor(getColor(R.color.btn_released))
+                }
+                else{
+                    i.setBackgroundColor(ContextCompat.getColor(this, R.color.btn_released))
+                }
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                v.setBackgroundColor(getColor(R.color.btn_pressed))
+            }
+            else{
+                v.setBackgroundColor(ContextCompat.getColor(this, R.color.btn_pressed))
+            }
+
+        }
+
+        setColor(btn_rec)
+
         val recfrag: RecFrag by lazy{RecFrag()}
         //Set recommendation button to switch fragments
         btn_rec.setOnClickListener {
             changeFrag(recfrag, getString(R.string.title_rec))
+            setColor(it)
         }
 
         val timefrag: TimeFrag by lazy { TimeFrag() }
         //Set my time table button to switch fragments
         btn_my.setOnClickListener {
             changeFrag(timefrag, getString(R.string.title_time))
+            setColor(it)
         }
 
         val makeFrag: MakeFrag by lazy{MakeFrag()}
         //Set make appointment button to switch fragments
         btn_frn.setOnClickListener {
             changeFrag(makeFrag, getString(R.string.title_make))
+            setColor(it)
         }
 
         //Instantiated using KakaoAdapter
@@ -156,9 +187,14 @@ class MainActivity : AppCompatActivity() {
             main.addView(loginview)
         }.addAfterSuccess {
             //If success, check if my info exists in server
-            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{}.addAfterFailure {
+            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
+                Toast.makeText(this, "ID exist confirm", Toast.LENGTH_SHORT).show()
+            }.addAfterFailure {
                     r: Response<String>->
-                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
+                    Toast.makeText(this, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
+                    Toast.makeText(this, "ID sign up failure", Toast.LENGTH_SHORT).show()
+                })
             })
         })
 
@@ -207,10 +243,14 @@ class MainActivity : AppCompatActivity() {
             override fun onSessionOpenFailed(exception: KakaoException?) {
                 Log.i("DEBUGMSG", "Login Failed")
                 Log.i("DEBUGMSG", "onSessionOpenFailed: "+exception)
+
+                Toast.makeText(applicationContext, "kakao session failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, exception?.message, Toast.LENGTH_SHORT).show()
             }
 
             override fun onSessionOpened() {
                 Log.i("DEBUGMSG", "Login Success")
+                Toast.makeText(applicationContext, "kakao login success", Toast.LENGTH_SHORT).show()
                 UserManagement.getInstance().me(KakaoResponseClass())
 
                 //On session opened, get friend list
@@ -240,10 +280,14 @@ class MainActivity : AppCompatActivity() {
             AuthService.getInstance().requestAccessTokenInfo(object: ApiResponseCallback<AccessTokenInfoResponse>(){
                 override fun onSuccess(result: AccessTokenInfoResponse?) {
                     Log.i("DEBUGMSG", "token refresh success")
+
+                    Toast.makeText(applicationContext, "token refresh success", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onSessionClosed(errorResult: ErrorResult?) {
                     Log.i("DEBUGMSG", "token refresh failed: "+errorResult)
+                    Toast.makeText(applicationContext, "token refresh failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, errorResult?.errorMessage, Toast.LENGTH_SHORT).show()
                 }
 
             })
@@ -251,14 +295,20 @@ class MainActivity : AppCompatActivity() {
             loginview = null
             //Retry getting my info
             UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
-                //Show login button to re open session
+                //If failed, show login button to re open session
                 loginview = lInflater.inflate(R.layout.activity_login, main, false)
                 loginview?.setOnTouchListener { v, event ->  true}
                 main.addView(loginview)
             }.addAfterSuccess {
-                RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{}.addAfterFailure {
+                //If success, check if my info exists in server
+                RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
+                    Toast.makeText(this, "ID exist confirm", Toast.LENGTH_SHORT).show()
+                }.addAfterFailure {
                         r: Response<String>->
-                    RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+                    RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
+                        Toast.makeText(this, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
+                        Toast.makeText(this, "ID sign up failure", Toast.LENGTH_SHORT).show()
+                    })
                 })
             })
         }

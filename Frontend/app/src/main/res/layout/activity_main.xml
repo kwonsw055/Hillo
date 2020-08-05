@@ -41,10 +41,9 @@
         android:id="@+id/main_frame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="1dp"
         android:gravity="center_horizontal|center_vertical"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintBottom_toTopOf="@+id/title_bar2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_bar">
@@ -57,51 +56,83 @@
 
     </FrameLayout>
 
+    <ImageView
+        android:id="@+id/title_bar2"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#000000"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        tools:layout_editor_absoluteX="-16dp" />
+
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
+        android:layout_height="60dp"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/btn_rec"
-            android:layout_width="@dimen/main_button_width"
-            android:layout_height="@dimen/main_button_height"
-            android:layout_margin="@dimen/main_button_margin"
+        <ImageButton
+            android:id="@+id/img_rec"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:adjustViewBounds="true"
             android:background="#FFFFFF"
-            android:text="R" />
+            android:cropToPadding="false"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:scaleX="1"
+            android:scaleY="1"
+            android:src="@drawable/imgbtn_rec"
+            tools:src="@drawable/imgbtn_rec" />
 
-        <Button
-            android:id="@+id/btn_my"
-            android:layout_width="@dimen/main_button_width"
-            android:layout_height="@dimen/main_button_height"
-            android:layout_margin="@dimen/main_button_margin"
+        <ImageButton
+            android:id="@+id/img_my"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:adjustViewBounds="true"
             android:background="#FFFFFF"
-            android:text="MySchd" />
+            android:cropToPadding="false"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:scaleX="1"
+            android:scaleY="1"
+            android:src="@drawable/imgbtn_my"
+            tools:src="@drawable/imgbtn_my" />
 
-        <Button
-            android:id="@+id/btn_frn"
-            android:layout_width="@dimen/main_button_width"
-            android:layout_height="@dimen/main_button_height"
-            android:layout_margin="@dimen/main_button_margin"
+        <ImageButton
+            android:id="@+id/img_frn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:adjustViewBounds="true"
             android:background="#FFFFFF"
-            android:text="Friend" />
+            android:cropToPadding="false"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:scaleX="1"
+            android:scaleY="1"
+            android:src="@drawable/imgbtn_fri"
+            tools:src="@drawable/imgbtn_fri" />
 
-        <Button
-            android:id="@+id/btn_opt"
-            android:layout_width="@dimen/main_button_width"
-            android:layout_height="@dimen/main_button_height"
-            android:layout_margin="@dimen/main_button_margin"
+        <ImageButton
+            android:id="@+id/img_opt"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:adjustViewBounds="true"
             android:background="#FFFFFF"
-            android:text="Option" />
+            android:cropToPadding="false"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:scaleX="1"
+            android:scaleY="1"
+            android:src="@drawable/imgbtn_opt"
+            tools:src="@drawable/imgbtn_opt" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

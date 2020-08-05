@@ -52,6 +52,9 @@
         android:layout_marginBottom="16dp"
         android:background="#00FFFFFF"
         android:clickable="true"
+        android:foreground="@android:drawable/ic_menu_add"
+        android:padding="0dp"
+        android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
