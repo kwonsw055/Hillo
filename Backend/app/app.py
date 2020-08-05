@@ -652,8 +652,12 @@ def testend():
 
     #Get all intersections
     temp = freetimes[0]
+
+    #If only one member has joined, reset session.
     if len(freetimes) == 1:
+        clearSession(session)
         return jsonify(temp)
+
     for ft in freetimes[1:]:
         inter = getinter(temp, ft)
         temp = convertinter(inter)
@@ -757,25 +761,28 @@ def testvote():
             data = str(votes[session]).encode()
             print(data)
             threading.Thread(target=connect, args=(ip, data)).start()"""
-        for i in givenports[session]:
-            threadphases[i-tcpPort] = 3
-
-        # Wait until all ports are closed
-        while portscount[session] > 0 :
-            True
-
-        votes[session].clear()
-        votecounts[session] = -1
-        sessions[session].clear()
-        givenports[session].clear()
-        sessionres[session] = b""
-
-        # Return session number
-        sema_available.acquire()
-        available.put(session)
-        sema_available.release()
+        clearSession(session)
 
     return success_msg
 
 def returnapp():
     return app
+
+def clearSession(session):
+    for i in givenports[session]:
+        threadphases[i - tcpPort] = 3
+
+    # Wait until all ports are closed
+    while portscount[session] > 0:
+        True
+
+    votes[session].clear()
+    votecounts[session] = -1
+    sessions[session].clear()
+    givenports[session].clear()
+    sessionres[session] = b""
+
+    # Return session number
+    sema_available.acquire()
+    available.put(session)
+    sema_available.release()
