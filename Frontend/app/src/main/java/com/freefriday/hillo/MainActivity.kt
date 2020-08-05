@@ -2,9 +2,14 @@
 //Will start up with recommendation fragment
 package com.freefriday.hillo
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
+import android.util.Base64.NO_WRAP
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +17,7 @@ import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import com.kakao.auth.*
+import com.kakao.auth.network.response.AccessTokenInfoResponse
 import com.kakao.friends.AppFriendContext
 import com.kakao.friends.AppFriendOrder
 import com.kakao.friends.response.AppFriendsResponse
@@ -27,8 +33,11 @@ import com.kakao.usermgmt.UserManagement
 import com.kakao.usermgmt.callback.MeV2ResponseCallback
 import com.kakao.usermgmt.response.MeV2Response
 import com.kakao.util.exception.KakaoException
+import com.kakao.util.helper.Utility.getPackageInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 //HTTP URL for server
 val baseIP = "34.64.150.182"
@@ -68,7 +77,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        Log.i("DEBUGMSG", getHashKey(this))
         //Button for recommendation fragment
         val btn_rec = findViewById<Button>(R.id.btn_rec)
 
@@ -147,8 +156,8 @@ class MainActivity : AppCompatActivity() {
             main.addView(loginview)
         }.addAfterSuccess {
             //If success, check if my info exists in server
-            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
-                r: Response<String>->
+            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{}.addAfterFailure {
+                    r: Response<String>->
                 RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
             })
         })
@@ -211,6 +220,7 @@ class MainActivity : AppCompatActivity() {
 
         //Get Kakao session
         Session.getCurrentSession().addCallback(sessionCallback)
+        Session.getCurrentSession().checkAndImplicitOpen()
     }
 
     override fun onBackPressed() {
@@ -227,6 +237,16 @@ class MainActivity : AppCompatActivity() {
         Log.i("DEBUGMSG", "Result Returned")
         if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
             //Delete login button
+            AuthService.getInstance().requestAccessTokenInfo(object: ApiResponseCallback<AccessTokenInfoResponse>(){
+                override fun onSuccess(result: AccessTokenInfoResponse?) {
+                    Log.i("DEBUGMSG", "token refresh success")
+                }
+
+                override fun onSessionClosed(errorResult: ErrorResult?) {
+                    Log.i("DEBUGMSG", "token refresh failed: "+errorResult)
+                }
+
+            })
             main.removeView(loginview)
             loginview = null
             //Retry getting my info
@@ -236,10 +256,45 @@ class MainActivity : AppCompatActivity() {
                 loginview?.setOnTouchListener { v, event ->  true}
                 main.addView(loginview)
             }.addAfterSuccess {
-                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+                RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{}.addAfterFailure {
+                        r: Response<String>->
+                    RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{})
+                })
             })
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+    fun getHashKey(context: Context): String? {
+        try {
+            if (Build.VERSION.SDK_INT >= 28) {
+                val packageInfo = getPackageInfo(context, PackageManager.GET_SIGNING_CERTIFICATES)
+                val signatures = packageInfo.signingInfo.apkContentsSigners
+                val md = MessageDigest.getInstance("SHA")
+                for (signature in signatures) {
+                    md.update(signature.toByteArray())
+                    return String(Base64.encode(md.digest(), NO_WRAP))
+                }
+            } else {
+                val packageInfo =
+                    getPackageInfo(context, PackageManager.GET_SIGNATURES) ?: return null
+
+                for (signature in packageInfo!!.signatures) {
+                    try {
+                        val md = MessageDigest.getInstance("SHA")
+                        md.update(signature.toByteArray())
+                        return Base64.encodeToString(md.digest(), Base64.NO_WRAP)
+                    } catch (e: NoSuchAlgorithmException) {
+                        // ERROR LOG
+                    }
+                }
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        }
+
+        return null
     }
 }
 
@@ -277,3 +332,4 @@ class KakaoResponseClass : MeV2ResponseCallback(){
         afterSessionClosed(errorResult)
     }
 }
+

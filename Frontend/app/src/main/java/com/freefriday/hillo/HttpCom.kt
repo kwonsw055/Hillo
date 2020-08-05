@@ -57,7 +57,7 @@ class CallBackClass: Callback<String> {
             afterSuccess(response)
         }
         else{
-            Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody())
+            Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody()?.string())
             afterFailure(response)
         }
     }
