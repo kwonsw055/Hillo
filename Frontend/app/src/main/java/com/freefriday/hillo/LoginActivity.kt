@@ -38,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.i("DEBUGMSG", "get friend success")
                 result?.friends!!.forEach{
                     Log.i("DEBUGMSG", it.profileNickname)
-                    insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage), {})
+                    insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage, it.uuid), {})
                 }
             }
 

@@ -7,6 +7,7 @@
     <string name="toast_session_ended">종료된 세션입니다.</string>
     <string name="toast_server_down">서버와 통신할 수 없습니다.\n잠시 후에 다시 시도해주세요.</string>
     <string name="toast_no_user">사용자 정보가 등록되지 않았습니다.\n앱을 실행해 로그인해주세요.</string>
+    <string name="toast_kakao_msg_sent">카카오톡 메시지를 성공적으로 전송하였습니다!</string>
 
     <string name="btn_delete">삭제</string>
     <string name="btn_add">추가</string>
@@ -27,7 +28,9 @@
     <string name="vote_count">%1$d 명</string>
 
     <string name="msg_text">다 같이 만날 시간을 알아봅시다!</string>
+    <string name="msg_rec_text">우리 %1$s 중 언제 만날까요?</string>
     <string name="msg_btn">앱에서 확인</string>
+    <string name="msg_btn_yes">좋아요!</string>
     <string name="msg_btnlink">freefriday.hillo.start</string>
 
     <string name="status_wait_server">서버에 접속중입니다...</string>

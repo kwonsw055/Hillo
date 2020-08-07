@@ -9,17 +9,19 @@ const val FriendTableName = "friendtable"
 const val FriendID = "id"
 const val FriendNickname = "nickname"
 const val FriendURL = "url"
+const val FriendUuid = "uuid"
 
 //DB file name
 const val FriendDBName = "friendtable.db"
-const val FriendDBVersion = 1
+const val FriendDBVersion = 2
 
 //Entity for friend table
 @Entity(tableName = FriendTableName)
 class Friend(
     @PrimaryKey @ColumnInfo(name = FriendID) var id: Long,
     @ColumnInfo(name = FriendNickname)var nickname: String,
-    @ColumnInfo(name = FriendURL)var url:String
+    @ColumnInfo(name = FriendURL)var url:String,
+    @ColumnInfo(name = FriendUuid)var uuid:String
 )
 
 //DAO for friend table

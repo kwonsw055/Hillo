@@ -3,6 +3,8 @@ package com.freefriday.hillo
 
 import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.GlideBuilder
@@ -18,6 +21,14 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.signature.ObjectKey
+import com.kakao.kakaolink.v2.KakaoLinkService
+import com.kakao.kakaotalk.callback.TalkResponseCallback
+import com.kakao.kakaotalk.response.MessageSendResponse
+import com.kakao.kakaotalk.v2.KakaoTalkService
+import com.kakao.message.template.ButtonObject
+import com.kakao.message.template.LinkObject
+import com.kakao.message.template.TextTemplate
+import com.kakao.network.ErrorResult
 
 //Glide Module for getting image
 @GlideModule
@@ -108,6 +119,42 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
         }
 
         holder.btn_del.setOnClickListener { deleteData(position) }
+        holder.btn_start.setOnClickListener {
+            //Get friend UUID
+            getFriend(context, data!![position].id) { f:Friend?->
+                if(f == null) {
+                    Handler(Looper.getMainLooper()).post{
+                        Toast.makeText(mainActivity, "no friend found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else {
+                    //Template for message
+                    val tempparm = TextTemplate.newBuilder(
+                        mainActivity.getString(R.string.msg_rec_text, data!![position].time.toString()),
+                        LinkObject.newBuilder().setAndroidExecutionParams("session=-1").build()).build()
+
+                    //Send message
+                    mainActivity.run {
+                        KakaoTalkService.getInstance().sendMessageToFriends(listOf(f.uuid), tempparm, object:
+                            TalkResponseCallback<MessageSendResponse>() {
+                            override fun onSuccess(result: MessageSendResponse?) {
+                                Log.i("DEBUGMSG", "kakao talk messaging success")
+                                Toast.makeText(mainActivity, getString(R.string.toast_kakao_msg_sent), Toast.LENGTH_SHORT).show()
+                            }
+
+                            override fun onNotKakaoTalkUser() {
+                                Log.i("DEBUGMSG", "kakao talk message failed: Not kakao talk user")
+                            }
+
+                            override fun onSessionClosed(errorResult: ErrorResult?) {
+                                Log.i("DEBUGMSG", "kakao talk message failed: Session closed")
+                            }
+
+                        })
+                    }
+                }
+            }
+        }
     }
 
     //Used for deleting an item

@@ -58,6 +58,8 @@ val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
 
 lateinit var appContext : Context
 
+lateinit var mainActivity : MainActivity
+
 //lambda for parsing free time
 val doparse : (Response<String>)->Unit = {
     val parsed = getJsonParse<FreetimeArray>(it)
@@ -80,6 +82,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         appContext = applicationContext
+        mainActivity = this
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.i("DEBUGMSG", getHashKey(this))
@@ -218,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                         getFriend(applicationContext, info.id, {
                             //Insert into DB
                             if(it == null){
-                                insertFriend(applicationContext, Friend(info.id, info.profileNickname, info.profileThumbnailImage), {})
+                                insertFriend(applicationContext, Friend(info.id, info.profileNickname, info.profileThumbnailImage, info.uuid), {})
                             }
                         })
 

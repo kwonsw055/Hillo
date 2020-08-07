@@ -14,6 +14,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.kakao.auth.IApplicationConfig
 import com.kakao.auth.KakaoAdapter
 import com.kakao.auth.KakaoSDK
+import com.kakao.kakaotalk.callback.TalkResponseCallback
+import com.kakao.kakaotalk.response.MessageSendResponse
+import com.kakao.kakaotalk.v2.KakaoTalkService
+import com.kakao.network.ErrorResult
 import com.kakao.usermgmt.UserManagement
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -36,6 +40,11 @@ class JoinActivity : AppCompatActivity() {
         //Get session number from intent parameter
         var session = intent.data?.getQueryParameter("session")?.toLong()
         Log.i("DEBUGMSG", "session="+session)
+
+        //if session == -1, do response to rec
+        if(session!!.toInt() == -1){
+            finish()
+        }
 
         //Text View for showing status
         val text_status = findViewById<TextView>(R.id.text_status)
