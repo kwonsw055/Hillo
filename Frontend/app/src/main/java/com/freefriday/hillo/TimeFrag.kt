@@ -1,6 +1,7 @@
 //Fragment for showing my time table
 package com.freefriday.hillo
 
+import android.content.Context
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
@@ -12,6 +13,14 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
+//string formater for start/end time pickers
+val timeformater = {
+        i: Int ->
+    val h = i/2
+    val m = i%2*30
+    (if(h>12){h-12}else{h}).toString()+":"+"%02d".format(m)+(if(h>=12){" PM"}else{" AM"})
+}
 
 class TimeFrag : Fragment() {
 
@@ -64,14 +73,6 @@ class TimeFrag : Fragment() {
         disableInput(num_day)
         //for initial value showing
         (NumberPicker::class.java.getDeclaredField("mInputText").apply { isAccessible = true }.get(num_day) as EditText).filters = emptyArray()
-
-        //string formater for start/end time pickers
-        val timeformater = {
-            i: Int ->
-            val h = i/2
-            val m = i%2*30
-            (if(h>12){h-12}else{h}).toString()+":"+"%02d".format(m)+(if(h>=12){" PM"}else{" AM"})
-        }
 
         //set start time picker
         num_start.minValue = 0
@@ -158,12 +159,19 @@ class TimeFrag : Fragment() {
         super.onStop()
         myid?.let {
             val id = it
+
+            fun int2time(time:Int):Int{
+                return (time/2)*100+(time%2)*30
+            }
+
+            val starttime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_starttime), defStarttime) ?: defStarttime
+            val endtime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_endtime), defEndtime) ?: defEndtime
             val day = mutableListOf<Int>()
             val start = mutableListOf<Int>()
             val end = mutableListOf<Int>()
 
             //Parse each components
-            getInverseTime().forEach {
+            getInverseTime(int2time(starttime), int2time(endtime)).forEach {
                 day.add(it.day.num)
                 start.add(it.start)
                 end.add(it.end)
@@ -181,20 +189,23 @@ class TimeFrag : Fragment() {
     }
 
     //Inverts timelist to freetime
-    fun getInverseTime():MutableList<TimeTable>{
+    fun getInverseTime(starttime:Int, endtime:Int):MutableList<TimeTable>{
         val inverted = mutableListOf<TimeTable>()
         val grouped = timelist.groupBy { it.day }
 
         for(day in 0 .. 6){
             val times = grouped[int2date(day)]?.sortedBy { it.start }
-            var itr = 0
+            var itr = starttime
             times?.let {
                 for(time in times){
-                    inverted.add(TimeTable(null, int2date(day)!!, itr, time.start))
-                    itr = time.end
+                    if(itr>endtime) break
+                    if(itr<time.start && time.start<endtime){
+                        inverted.add(TimeTable(null, int2date(day)!!, itr, time.start))
+                        itr = time.end
+                    }
                 }
             }
-            inverted.add(TimeTable(null, int2date(day)!!, itr, 2359))
+            if(itr<endtime)inverted.add(TimeTable(null, int2date(day)!!, itr, endtime))
         }
         return inverted
     }

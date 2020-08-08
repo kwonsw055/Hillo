@@ -165,6 +165,12 @@ class MainActivity : AppCompatActivity() {
             setColor(it)
         }
 
+        val optFrag: OptFrag by lazy{OptFrag()}
+        btn_opt.setOnClickListener{
+            changeFrag(optFrag, getString(R.string.title_opt))
+            setColor(it)
+        }
+
         //Instantiated using KakaoAdapter
         //Used for initialization
         val inst = object: KakaoAdapter(){
