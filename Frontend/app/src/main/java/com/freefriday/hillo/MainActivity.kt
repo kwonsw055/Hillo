@@ -80,6 +80,28 @@ lateinit var lInflater: LayoutInflater
 
 class MainActivity : AppCompatActivity() {
 
+    //Try getting my info
+    val getNsetID = {
+            context: Context->
+        UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
+            //If failed, show login button to re open session
+            loginview = lInflater.inflate(R.layout.activity_login, main, false)
+            loginview?.setOnTouchListener { v, event ->  true}
+            main.addView(loginview)
+        }.addAfterSuccess {
+            //If success, check if my info exists in server
+            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
+                Toast.makeText(context, "ID exist confirm", Toast.LENGTH_SHORT).show()
+            }.addAfterFailure {
+                    r: Response<String>->
+                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
+                    Toast.makeText(context, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
+                    Toast.makeText(context, "ID sign up failure", Toast.LENGTH_SHORT).show()
+                })
+            })
+        })
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         appContext = applicationContext
         mainActivity = this
@@ -188,25 +210,6 @@ class MainActivity : AppCompatActivity() {
         }catch (e:KakaoSDK.AlreadyInitializedException){
         }
 
-        //Try getting my info
-        UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
-            //If failed, show login button to re open session
-            loginview = lInflater.inflate(R.layout.activity_login, main, false)
-            loginview?.setOnTouchListener { v, event ->  true}
-            main.addView(loginview)
-        }.addAfterSuccess {
-            //If success, check if my info exists in server
-            RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
-                Toast.makeText(this, "ID exist confirm", Toast.LENGTH_SHORT).show()
-            }.addAfterFailure {
-                    r: Response<String>->
-                RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
-                    Toast.makeText(this, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
-                    Toast.makeText(this, "ID sign up failure", Toast.LENGTH_SHORT).show()
-                })
-            })
-        })
-
         //lambda for getting friends
         val getFriendlist = {
 
@@ -260,7 +263,7 @@ class MainActivity : AppCompatActivity() {
             override fun onSessionOpened() {
                 Log.i("DEBUGMSG", "Login Success")
                 Toast.makeText(applicationContext, "kakao login success", Toast.LENGTH_SHORT).show()
-                UserManagement.getInstance().me(KakaoResponseClass())
+                getNsetID(applicationContext)
 
                 //On session opened, get friend list
                 getFriendlist()
@@ -285,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         //When login is done
         Log.i("DEBUGMSG", "Result Returned")
         if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
-            //Delete login button
+            //refresh token
             AuthService.getInstance().requestAccessTokenInfo(object: ApiResponseCallback<AccessTokenInfoResponse>(){
                 override fun onSuccess(result: AccessTokenInfoResponse?) {
                     Log.i("DEBUGMSG", "token refresh success")
@@ -300,26 +303,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
             })
+            //Delete login button
             main.removeView(loginview)
             loginview = null
             //Retry getting my info
-            UserManagement.getInstance().me(KakaoResponseClass().addAfterSessionClosed {
-                //If failed, show login button to re open session
-                loginview = lInflater.inflate(R.layout.activity_login, main, false)
-                loginview?.setOnTouchListener { v, event ->  true}
-                main.addView(loginview)
-            }.addAfterSuccess {
-                //If success, check if my info exists in server
-                RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
-                    Toast.makeText(this, "ID exist confirm", Toast.LENGTH_SHORT).show()
-                }.addAfterFailure {
-                        r: Response<String>->
-                    RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
-                        Toast.makeText(this, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
-                        Toast.makeText(this, "ID sign up failure", Toast.LENGTH_SHORT).show()
-                    })
-                })
-            })
+            getNsetID(applicationContext)
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
