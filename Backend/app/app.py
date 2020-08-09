@@ -431,6 +431,10 @@ threadphases = []
 #Results for sessions
 sessionres = []
 
+#Temp freetime for sessions.
+#Each session contains a dict.
+temptimes = []
+
 #Base TCP Port
 tcpPort = 7000
 
@@ -448,6 +452,7 @@ for i in range(0,maxsession):
     sessionres.append(b"")
     portscount.append(0)
     sema_portcount.append(threading.Semaphore())
+    temptimes.append({})
 
 #Initialize ports
 for i in range(tcpPort, tcpCount):
@@ -477,6 +482,7 @@ def testmake():
     sessions[session].clear()
     votes[session].clear()
     votecounts[session] = -1
+    temptimes[session].clear()
     #Add user info
     sessions[session].append((id, request.remote_addr ))
     sema_sessions[session].release()
@@ -636,7 +642,7 @@ def testend():
 
     for id, ip in sessions[session]:
         #Lock when accessing freetable
-        sema_freetable.acquire()
+        """sema_freetable.acquire()
         freelist = query(f"select * from {freetable} where {user_id}={id}")
         sema_freetable.release()
 
@@ -645,7 +651,10 @@ def testend():
 
         #Convert into freetimelist
         for ft in freelist:
-            freetime.append((ft[free_day], ft[start_time], ft[end_time]))
+            freetime.append((ft[free_day], ft[start_time], ft[end_time]))"""
+
+        #Get freetime from temptimes
+        freetime = temptimes[session][id]
 
         #Append to result
         freetimes.append(freetime)
@@ -786,3 +795,56 @@ def clearSession(session):
     sema_available.acquire()
     available.put(session)
     sema_available.release()
+
+#Set temp free time
+@app.route("/test-settt", methods=["POST"])
+def testsettt():
+    #Json for free time list
+    json = request.json
+
+    #Check is Json is in correct form
+    if json is None:
+        return error_msg["json_none"]
+    if "id" not in json:
+        return error_msg["no_id"]
+    if "day" not in json:
+        return error_msg["no_day"]
+    if "start" not in json:
+        return error_msg["no_start"]
+    if "end" not in json:
+        return error_msg["no_end"]
+
+    # Get session
+    session = request.args.get("session")
+    if session is None:
+        return error_msg["no_session"]
+
+    # Convert session into int
+    session = eval(session)
+
+    #Get id
+    id = json["id"]
+
+    #Get list for day, start, end
+    day = json["day"]
+    start = json["start"]
+    end = json["end"]
+
+    #Make sure list length are all same
+    if len(day)!=len(start) or len(day)!=len(end):
+        return error_msg["day_time_mis"]
+
+    #Make into list of tuple
+    freetime = list(zip(day, start, end))
+    res = []
+    for time in freetime:
+        res.append((int2day(time[0]),time[1],time[2]))
+
+    #Lock when modifying temptimes
+    sema_sessions[session].acquire()
+    temptimes[session][str(id)] = res
+    print(temptimes[session])
+    sema_sessions[session].release()
+
+    #Return result
+    return success_msg
