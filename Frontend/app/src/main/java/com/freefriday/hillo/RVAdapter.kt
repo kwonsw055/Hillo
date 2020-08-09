@@ -201,6 +201,7 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?, val delDB: Boolean) :
 
     //Used for deleting an item
     fun deleteData(pos: Int){
+        //Make change to DB only if delDB is true
         if(delDB)deleteTable(context!!, data!![pos],{})
         data?.removeAt(pos)
         this.notifyItemRemoved(pos)

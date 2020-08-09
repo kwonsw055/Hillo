@@ -34,18 +34,21 @@ import java.net.SocketTimeoutException
 //Max nubmer of stages
 const val maxStage = 4
 
+//Singleton for application context
 lateinit var joinappContext: Context
 
+//Session no.
 var session: Long? = -1
 
 class JoinActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        //init application context
         joinappContext = this.applicationContext
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_join)
-
 
         //Get session number from intent parameter
         session = intent.data?.getQueryParameter("session")?.toLong()
@@ -138,9 +141,9 @@ class JoinActivity : AppCompatActivity() {
                 transaction.remove(frag_join)
                 transaction.commit()
 
+                //Refine UI
                 text_title.text = getString(R.string.title_join)
                 text_status.visibility = View.VISIBLE
-
                 rv_join.visibility = View.VISIBLE
 
                 //Join session via http
@@ -313,7 +316,6 @@ class JoinActivity : AppCompatActivity() {
         btn_end.setOnClickListener {
             RetrofitObj.getinst().endsession(session).enqueue(CallBackClass{})
         }
-
 
     }
 }

@@ -1,4 +1,3 @@
-//Fragment for showing my time table
 package com.freefriday.hillo
 
 import android.content.Context
@@ -22,11 +21,16 @@ val timeformater = {
     (if(h>12){h-12}else{h}).toString()+":"+"%02d".format(m)+(if(h>=12){" PM"}else{" AM"})
 }
 
+//Fragment for showing my time table before joining session
 class TempTimeFrag: TimeFrag(){
     override val appcontext: Context = joinappContext
-    override val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, false)}
+
+    override val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, false)}//don't write to DB
+
     override fun afteraddtext(time: TimeTable) {}//don't add to database
+
     override fun postTime(timelist: TimeList){
+        //Use settemptime instead of settime
         RetrofitObj.getinst().settemptime(session, timelist).enqueue(CallBackClass{
             Log.i("DEBUGMSG", it.toString())
             Toast.makeText(appcontext, "Temp Timetable upload success", Toast.LENGTH_SHORT).show()
@@ -37,6 +41,7 @@ class TempTimeFrag: TimeFrag(){
     }
 }
 
+//Fragment for showing my time table
 open class TimeFrag : Fragment() {
 
     //numberpickers for time input
@@ -49,6 +54,8 @@ open class TimeFrag : Fragment() {
 
     //button for submitting
     lateinit var btn_submit : Button
+
+    //Application context
     open val appcontext = appContext
 
     //list of time
@@ -173,6 +180,7 @@ open class TimeFrag : Fragment() {
         }
     }
 
+    //function to be executed after adding text
     open fun afteraddtext(time:TimeTable)=insertTable(activity?.applicationContext!!, time, {})
 
     //On end, post time table.
@@ -203,6 +211,7 @@ open class TimeFrag : Fragment() {
         }
     }
 
+    //Used for posting free time
     open fun postTime(timelist: TimeList){
         RetrofitObj.getinst().settime(timelist).enqueue(CallBackClass{
             Log.i("DEBUGMSG", it.toString())
