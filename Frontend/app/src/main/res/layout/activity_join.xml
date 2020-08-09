@@ -24,7 +24,7 @@
             android:layout_marginLeft="10dp"
             android:layout_weight="1"
             android:gravity="left|center_vertical"
-            android:text="@string/title_join"
+            android:text="@string/title_join_temptime"
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -38,15 +38,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_frame_join" />
 
+    <fragment
+        android:id="@+id/frag_join"
+        android:name="com.freefriday.hillo.TempTimeFrag"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/text_joincount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_frame_join" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_join"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="16dp"
+        android:background="#FFFFFF"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/text_joincount"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        tools:visibility="gone">
+
+    </androidx.recyclerview.widget.RecyclerView>
 
     <TextView
         android:id="@+id/text_status"
@@ -55,11 +70,12 @@
         android:gravity="center"
         android:text="@string/status_wait_server"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible" />
+        tools:visibility="invisible" />
 
     <TextView
         android:id="@+id/text_joincount"
@@ -67,7 +83,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:text="@string/status_count"
+        android:text="@string/status_check"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/btn_end"
         app:layout_constraintEnd_toEndOf="parent"
@@ -83,7 +99,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
 
     <Button
         android:id="@+id/btn_end"
@@ -91,8 +107,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/btn_end"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
+        tools:visibility="invisible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

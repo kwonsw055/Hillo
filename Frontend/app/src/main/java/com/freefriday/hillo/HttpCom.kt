@@ -118,4 +118,8 @@ interface Rinter{
     //Vote
     @POST("test-vote")
     fun votesession(@Query("session") session:Long?, @Query("item") item:Int?): Call<String>
+
+    //Post temp time
+    @POST("test-settt")
+    fun settemptime(@Query("session") session:Long?, @Body body:TimeList):Call<String>
 }

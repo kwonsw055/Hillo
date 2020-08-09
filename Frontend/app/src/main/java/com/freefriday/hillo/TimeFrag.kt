@@ -22,7 +22,22 @@ val timeformater = {
     (if(h>12){h-12}else{h}).toString()+":"+"%02d".format(m)+(if(h>=12){" PM"}else{" AM"})
 }
 
-class TimeFrag : Fragment() {
+class TempTimeFrag: TimeFrag(){
+    override val appcontext: Context = joinappContext
+    override val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, false)}
+    override fun afteraddtext(time: TimeTable) {}//don't add to database
+    override fun postTime(timelist: TimeList){
+        RetrofitObj.getinst().settemptime(session, timelist).enqueue(CallBackClass{
+            Log.i("DEBUGMSG", it.toString())
+            Toast.makeText(appcontext, "Temp Timetable upload success", Toast.LENGTH_SHORT).show()
+        }.addAfterFailure {
+            Toast.makeText(appcontext, "Temp Timetable upload failure", Toast.LENGTH_SHORT).show()
+            Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+        })
+    }
+}
+
+open class TimeFrag : Fragment() {
 
     //numberpickers for time input
     lateinit var num_day : NumberPicker
@@ -34,9 +49,13 @@ class TimeFrag : Fragment() {
 
     //button for submitting
     lateinit var btn_submit : Button
+    open val appcontext = appContext
 
     //list of time
     val timelist= mutableListOf<TimeTable>()
+
+    //Recycler View Adapter used for time table fragment
+    open val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, true)}
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -107,18 +126,6 @@ class TimeFrag : Fragment() {
             activity?.runOnUiThread {timervadapter.notifyDataSetChanged()}
         })
 
-        //function for adding time
-        fun addtext(time:TimeTable){
-            timelist.add(time)
-            timelist.sortBy { it.day.num*2400+it.start }
-            val pos = timelist.indexOf(time)
-            insertTable(applicationContext, time, {})
-            activity?.runOnUiThread {
-                timervadapter.notifyItemInserted(pos)
-                timervadapter.notifyItemRangeChanged(pos, timervadapter.itemCount)
-            }
-        }
-
         //number picker value to integer time value
         fun picker2time(p: NumberPicker):Int=(p.value/2)*100+(p.value%2)*30
 
@@ -154,6 +161,20 @@ class TimeFrag : Fragment() {
         return inflated
     }
 
+    //function for adding time
+    open fun addtext(time:TimeTable){
+        timelist.add(time)
+        timelist.sortBy { it.day.num*2400+it.start }
+        val pos = timelist.indexOf(time)
+        afteraddtext(time)
+        activity?.runOnUiThread {
+            timervadapter.notifyItemInserted(pos)
+            timervadapter.notifyItemRangeChanged(pos, timervadapter.itemCount)
+        }
+    }
+
+    open fun afteraddtext(time:TimeTable)=insertTable(activity?.applicationContext!!, time, {})
+
     //On end, post time table.
     override fun onStop() {
         super.onStop()
@@ -178,14 +199,18 @@ class TimeFrag : Fragment() {
             }
 
             //Post free time
-            RetrofitObj.getinst().settime(TimeList(id, day, start, end)).enqueue(CallBackClass{
-                Log.i("DEBUGMSG", it.toString())
-                Toast.makeText(appContext, "Timetable upload success", Toast.LENGTH_SHORT).show()
-            }.addAfterFailure {
-                Toast.makeText(appContext, "Timetable upload failure", Toast.LENGTH_SHORT).show()
-                Toast.makeText(appContext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
-            })
+            postTime(TimeList(id, day, start, end))
         }
+    }
+
+    open fun postTime(timelist: TimeList){
+        RetrofitObj.getinst().settime(timelist).enqueue(CallBackClass{
+            Log.i("DEBUGMSG", it.toString())
+            Toast.makeText(appcontext, "Timetable upload success", Toast.LENGTH_SHORT).show()
+        }.addAfterFailure {
+            Toast.makeText(appcontext, "Timetable upload failure", Toast.LENGTH_SHORT).show()
+            Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+        })
     }
 
     //Inverts timelist to freetime

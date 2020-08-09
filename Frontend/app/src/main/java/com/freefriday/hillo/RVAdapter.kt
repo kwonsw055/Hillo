@@ -166,7 +166,7 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
 }
 
 //Recycler View Adapter for Timetable
-class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapter<TimetableRVAdapter.RVHolder>(){
+class TimetableRVAdapter(var data:MutableList<TimeTable>?, val delDB: Boolean) : RecyclerView.Adapter<TimetableRVAdapter.RVHolder>(){
 
     //Application Context
     var context: Context? = null
@@ -201,7 +201,7 @@ class TimetableRVAdapter(var data:MutableList<TimeTable>?) : RecyclerView.Adapte
 
     //Used for deleting an item
     fun deleteData(pos: Int){
-        deleteTable(context!!, data!![pos],{})
+        if(delDB)deleteTable(context!!, data!![pos],{})
         data?.removeAt(pos)
         this.notifyItemRemoved(pos)
         this.notifyItemRangeChanged(pos, itemCount)

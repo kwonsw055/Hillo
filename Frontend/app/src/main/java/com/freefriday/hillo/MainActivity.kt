@@ -42,7 +42,7 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
 //HTTP URL for server
-val baseIP = "34.64.150.182"
+val baseIP = "172.30.1.50"
 val basePort = 5000
 val tcpPort = 7000
 val baseURL = "http://${baseIP}:${basePort}"
@@ -52,9 +52,6 @@ var myid:Long? = null
 
 //Recycler View Adapter used for recommendation fragment
 val recrvadapter: FreetimeRVAdapter by lazy{ FreetimeRVAdapter(null)}
-
-//Recycler View Adapter used for time table fragment
-val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null)}
 
 lateinit var appContext : Context
 
@@ -209,6 +206,8 @@ class MainActivity : AppCompatActivity() {
             KakaoSDK.init(inst)
         }catch (e:KakaoSDK.AlreadyInitializedException){
         }
+
+        getNsetID(this)
 
         //lambda for getting friends
         val getFriendlist = {
