@@ -183,6 +183,7 @@ open class TimeFrag : Fragment() {
             timervadapter.notifyItemInserted(pos)
             timervadapter.notifyItemRangeChanged(pos, timervadapter.itemCount)
         }
+        changed = true
     }
 
     //function to be executed after adding text
