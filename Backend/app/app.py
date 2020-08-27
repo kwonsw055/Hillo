@@ -15,6 +15,7 @@ app = Flask(__name__)
 usertable = "user_table"
 friendtable = "friend_table"
 freetable = "free_table"
+rmtable = "remove_table"
 
 #DB attributes
 user_id = "id"
@@ -30,8 +31,6 @@ success_msg = "Done"
 #leader message
 leader_msg = "Leader"
 
-#
-
 #error messages
 error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_id":("Error: No ID Provided",400),
@@ -42,6 +41,7 @@ error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_end":("Error: No End time Provided", 400),
              "no_session":("Error: No session Provided", 400),
              "no_item":("Error: No item Provided", 400),
+             "no_time":("Error: No time Provided", 400),
              "day_time_mis":("Error: Day and Time list mismatch", 400),
              "id_dup":("Error: Duplicate ID", 400),
              "id_none":("Error: Non existing ID", 400),
@@ -382,7 +382,17 @@ def testgetf():
         #Get intersection of mytimelist and friend's freetimelist
         inter = getinter(mytimelist, ftimelist)
         #Append to result
-        if len(inter)>0: result.append({"fid":fid[friend_id], "name":fid[user_name],"times":inter})
+        if len(inter)>0:
+            #Get removed item list
+            rmlist = query(f"select {free_day}, {start_time}, {end_time} from {rmtable} where {user_id}={id} and {friend_id}={fid[friend_id]}")
+
+            #Append to result only if not in rmlist
+            interresult = []
+            for i in inter:
+                if i not in rmlist:
+                    interresult.append(i)
+
+            result.append({"fid":fid[friend_id], "name":fid[user_name],"times":interresult})
 
     #Return result
     return jsonify({"result":result})
@@ -848,3 +858,48 @@ def testsettt():
 
     #Return result
     return success_msg
+
+#Insert removed recommendation into DB
+#Returns status message
+def insert_removed(id, fid, day, start, end):
+    #Check if id exists
+    find = query(f"select * from {usertable} where {user_id}={id}")
+    if len(find)==0:
+        return error_msg["id_none"]
+
+    #Do insert
+    res = query(f"insert into {rmtable} values({id},{fid},'{int2day(day)}', {start}, {end})")
+
+    #Check if insertion failed
+    if res is None:
+        return error_msg["insert_fail"]
+
+    #If success, return success message
+    return success_msg
+
+#Remove recommendation
+@app.route("/test-rmrec", methods=["POST"])
+def testrmrec():
+    # Get id
+    id = request.args.get("id")
+    if id is None:
+        return error_msg["no_id"]
+
+    # Get fid
+    fid = request.args.get("fid")
+    if fid is None:
+        return error_msg["no_fid"]
+
+    # Get time
+    time = request.args.get("time")
+    if time is None:
+        return error_msg["no_time"]
+    time = eval(time)
+
+    # deconstruct time
+    day = time//100000000
+    start = (time%100000000)//10000
+    end = time%10000
+
+    # Insert
+    return insert_removed(id, fid, day, start, end)

@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.30, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.31, for Linux (x86_64)
 --
 -- Host: localhost    Database: 
 -- ------------------------------------------------------
--- Server version	5.7.30-0ubuntu0.18.04.1
+-- Server version	5.7.31-0ubuntu0.18.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS `gtid_executed` (
   `interval_start` bigint(20) NOT NULL COMMENT 'First number of interval.',
   `interval_end` bigint(20) NOT NULL COMMENT 'Last number of interval.',
   PRIMARY KEY (`source_uuid`,`interval_start`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 STATS_PERSISTENT=0;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -337,7 +337,7 @@ CREATE TABLE `innodb_index_stats` (
 
 LOCK TABLES `innodb_index_stats` WRITE;
 /*!40000 ALTER TABLE `innodb_index_stats` DISABLE KEYS */;
-INSERT INTO `innodb_index_stats` VALUES ('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_diff_pfx01',0,1,'source_uuid'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_diff_pfx02',0,1,'source_uuid,interval_start'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','size',1,NULL,'Number of pages in the index'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','n_diff_pfx01',6,1,'variable'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','size',1,NULL,'Number of pages in the index'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','n_diff_pfx01',3,1,'id'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','n_diff_pfx02',11,1,'id,day'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','n_diff_pfx03',22,1,'id,day,start'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','n_diff_pfx04',22,1,'id,day,start,end'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','free_table','PRIMARY','2020-07-19 07:59:24','size',1,NULL,'Number of pages in the index'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_diff_pfx01',1,1,'id'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_diff_pfx02',2,1,'id,f_id'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','size',1,NULL,'Number of pages in the index'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_diff_pfx01',2,1,'f_id'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_diff_pfx02',2,1,'f_id,id'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','friend_table','f_id','2020-07-09 02:13:07','size',1,NULL,'Number of pages in the index'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','n_diff_pfx01',2,1,'id'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','size',1,NULL,'Number of pages in the index');
+INSERT INTO `innodb_index_stats` VALUES ('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_diff_pfx01',0,1,'source_uuid'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_diff_pfx02',0,1,'source_uuid,interval_start'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('mysql','gtid_executed','PRIMARY','2020-06-24 07:54:01','size',1,NULL,'Number of pages in the index'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','n_diff_pfx01',6,1,'variable'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('sys','sys_config','PRIMARY','2020-06-24 07:54:08','size',1,NULL,'Number of pages in the index'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','n_diff_pfx01',5,1,'id'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','n_diff_pfx02',24,1,'id,day'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','n_diff_pfx03',32,1,'id,day,start'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','n_diff_pfx04',32,1,'id,day,start,end'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','free_table','PRIMARY','2020-08-09 09:49:03','size',1,NULL,'Number of pages in the index'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_diff_pfx01',1,1,'id'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_diff_pfx02',2,1,'id,f_id'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','friend_table','PRIMARY','2020-07-09 02:13:07','size',1,NULL,'Number of pages in the index'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_diff_pfx01',2,1,'f_id'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_diff_pfx02',2,1,'f_id,id'),('testdb','friend_table','f_id','2020-07-09 02:13:07','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','friend_table','f_id','2020-07-09 02:13:07','size',1,NULL,'Number of pages in the index'),('testdb','remove_table','GEN_CLUST_INDEX','2020-08-27 10:19:28','n_diff_pfx01',2,1,'DB_ROW_ID'),('testdb','remove_table','GEN_CLUST_INDEX','2020-08-27 10:19:28','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','remove_table','GEN_CLUST_INDEX','2020-08-27 10:19:28','size',1,NULL,'Number of pages in the index'),('testdb','remove_table','id','2020-08-27 10:19:28','n_diff_pfx01',1,1,'id'),('testdb','remove_table','id','2020-08-27 10:19:28','n_diff_pfx02',1,1,'id,f_id'),('testdb','remove_table','id','2020-08-27 10:19:28','n_diff_pfx03',2,1,'id,f_id,DB_ROW_ID'),('testdb','remove_table','id','2020-08-27 10:19:28','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','remove_table','id','2020-08-27 10:19:28','size',1,NULL,'Number of pages in the index'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','n_diff_pfx01',2,1,'id'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','n_leaf_pages',1,NULL,'Number of leaf pages in the index'),('testdb','user_table','PRIMARY','2020-07-07 06:49:30','size',1,NULL,'Number of pages in the index');
 /*!40000 ALTER TABLE `innodb_index_stats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,7 +365,7 @@ CREATE TABLE `innodb_table_stats` (
 
 LOCK TABLES `innodb_table_stats` WRITE;
 /*!40000 ALTER TABLE `innodb_table_stats` DISABLE KEYS */;
-INSERT INTO `innodb_table_stats` VALUES ('mysql','gtid_executed','2020-06-24 07:54:01',0,1,0),('sys','sys_config','2020-06-24 07:54:08',6,1,0),('testdb','free_table','2020-07-19 07:59:24',22,1,0),('testdb','friend_table','2020-07-09 02:13:07',2,1,1),('testdb','user_table','2020-07-07 06:49:30',2,1,0);
+INSERT INTO `innodb_table_stats` VALUES ('mysql','gtid_executed','2020-06-24 07:54:01',0,1,0),('sys','sys_config','2020-06-24 07:54:08',6,1,0),('testdb','free_table','2020-08-09 09:49:03',32,1,0),('testdb','friend_table','2020-07-09 02:13:07',2,1,1),('testdb','remove_table','2020-08-27 10:19:28',2,1,1),('testdb','user_table','2020-07-07 06:49:30',2,1,0);
 /*!40000 ALTER TABLE `innodb_table_stats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -959,7 +959,7 @@ CREATE TABLE `free_table` (
 
 LOCK TABLES `free_table` WRITE;
 /*!40000 ALTER TABLE `free_table` DISABLE KEYS */;
-INSERT INTO `free_table` VALUES (20000,'MON',1200,1600),(20000,'MON',1800,2000),(20000,'TUE',1600,2100),(25000,'MON',1000,1300),(25000,'MON',1400,1900),(25000,'TUE',2000,2100),(1397044090,'MON',0,1100),(1397044090,'MON',1230,1700),(1397044090,'MON',2030,2359),(1397044090,'TUE',0,1100),(1397044090,'TUE',1230,1400),(1397044090,'TUE',1530,2359),(1397044090,'WED',0,1100),(1397044090,'WED',1230,1700),(1397044090,'WED',1830,2359),(1397044090,'THU',0,1100),(1397044090,'THU',1230,1400),(1397044090,'THU',1530,2359),(1397044090,'FRI',0,1100),(1397044090,'FRI',1300,2359),(1397044090,'SAT',0,2359),(1397044090,'SUN',0,2359);
+INSERT INTO `free_table` VALUES (20000,'MON',1200,1600),(20000,'MON',1800,2000),(20000,'TUE',1600,2100),(20000,'WED',0,2359),(20000,'THU',0,2359),(20000,'FRI',0,2359),(20000,'SAT',0,2359),(20000,'SUN',0,2359),(25000,'MON',1000,1300),(25000,'MON',1400,1900),(25000,'TUE',2000,2100),(30000,'MON',0,2359),(1397044090,'MON',0,2359),(1397044090,'TUE',0,2359),(1397044090,'WED',0,2359),(1397044090,'THU',0,2359),(1397044090,'FRI',0,2359),(1397044090,'SAT',0,2359),(1397044090,'SUN',0,2359),(1438683654,'MON',1100,1600),(1438683654,'MON',1700,2000),(1438683654,'MON',2200,2300),(1438683654,'TUE',1100,2000),(1438683654,'TUE',2200,2300),(1438683654,'WED',1100,2300),(1438683654,'THU',1100,1430),(1438683654,'THU',1730,2000),(1438683654,'THU',2200,2300),(1438683654,'FRI',1100,2300),(1438683654,'SAT',1100,2000),(1438683654,'SAT',2200,2300),(1438683654,'SUN',1100,2300);
 /*!40000 ALTER TABLE `free_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -986,8 +986,36 @@ CREATE TABLE `friend_table` (
 
 LOCK TABLES `friend_table` WRITE;
 /*!40000 ALTER TABLE `friend_table` DISABLE KEYS */;
-INSERT INTO `friend_table` VALUES (1397044090,20000),(20000,25000),(20000,30000);
+INSERT INTO `friend_table` VALUES (1397044090,20000),(20000,25000),(20000,30000),(1438683654,1397044090),(1397044090,1438683654);
 /*!40000 ALTER TABLE `friend_table` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `remove_table`
+--
+
+DROP TABLE IF EXISTS `remove_table`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `remove_table` (
+  `id` int(11) DEFAULT NULL,
+  `f_id` int(11) DEFAULT NULL,
+  `day` enum('MON','TUE','WED','THU','FRI','SAT','SUN') DEFAULT NULL,
+  `start` smallint(6) DEFAULT NULL,
+  `end` smallint(6) DEFAULT NULL,
+  KEY `id` (`id`,`f_id`),
+  CONSTRAINT `remove_table_ibfk_1` FOREIGN KEY (`id`, `f_id`) REFERENCES `friend_table` (`id`, `f_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `remove_table`
+--
+
+LOCK TABLES `remove_table` WRITE;
+/*!40000 ALTER TABLE `remove_table` DISABLE KEYS */;
+INSERT INTO `remove_table` VALUES (1397044090,20000,'MON',1300,1600),(1397044090,20000,'MON',1200,1600);
+/*!40000 ALTER TABLE `remove_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1010,7 +1038,7 @@ CREATE TABLE `user_table` (
 
 LOCK TABLES `user_table` WRITE;
 /*!40000 ALTER TABLE `user_table` DISABLE KEYS */;
-INSERT INTO `user_table` VALUES (20000,'테스터'),(25000,'테스티'),(30000,'mytest'),(1397044090,'FreeFriday');
+INSERT INTO `user_table` VALUES (20000,'테스터'),(25000,'테스티'),(30000,'mytest'),(1397044090,'FreeFriday'),(1438683654,'권상우');
 /*!40000 ALTER TABLE `user_table` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1023,4 +1051,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-07-19 17:47:04
+-- Dump completed on 2020-08-27 19:29:24
