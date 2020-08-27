@@ -25,9 +25,11 @@ val timeformater = {
 class TempTimeFrag: TimeFrag(){
     override val appcontext: Context = joinappContext
 
-    override val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, false)}//don't write to DB
+    override val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, false, {})}//don't write to DB
 
     override fun afteraddtext(time: TimeTable) {}//don't add to database
+
+    override var changed = true
 
     override fun postTime(timelist: TimeList){
         //Use settemptime instead of settime
@@ -62,7 +64,10 @@ open class TimeFrag : Fragment() {
     val timelist= mutableListOf<TimeTable>()
 
     //Recycler View Adapter used for time table fragment
-    open val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, true)}
+    open val timervadapter : TimetableRVAdapter by lazy{ TimetableRVAdapter(null, true, {changed=true})}
+
+    //did the value change?
+    open var changed = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -186,28 +191,30 @@ open class TimeFrag : Fragment() {
     //On end, post time table.
     override fun onStop() {
         super.onStop()
-        myid?.let {
-            val id = it
+        if(changed){
+            myid?.let {
+                val id = it
 
-            fun int2time(time:Int):Int{
-                return (time/2)*100+(time%2)*30
+                fun int2time(time:Int):Int{
+                    return (time/2)*100+(time%2)*30
+                }
+
+                val starttime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_starttime), defStarttime) ?: defStarttime
+                val endtime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_endtime), defEndtime) ?: defEndtime
+                val day = mutableListOf<Int>()
+                val start = mutableListOf<Int>()
+                val end = mutableListOf<Int>()
+
+                //Parse each components
+                getInverseTime(int2time(starttime), int2time(endtime)).forEach {
+                    day.add(it.day.num)
+                    start.add(it.start)
+                    end.add(it.end)
+                }
+
+                //Post free time
+                postTime(TimeList(id, day, start, end))
             }
-
-            val starttime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_starttime), defStarttime) ?: defStarttime
-            val endtime = this.activity?.getPreferences(Context.MODE_PRIVATE)?.getInt(getString(R.string.pref_endtime), defEndtime) ?: defEndtime
-            val day = mutableListOf<Int>()
-            val start = mutableListOf<Int>()
-            val end = mutableListOf<Int>()
-
-            //Parse each components
-            getInverseTime(int2time(starttime), int2time(endtime)).forEach {
-                day.add(it.day.num)
-                start.add(it.start)
-                end.add(it.end)
-            }
-
-            //Post free time
-            postTime(TimeList(id, day, start, end))
         }
     }
 
