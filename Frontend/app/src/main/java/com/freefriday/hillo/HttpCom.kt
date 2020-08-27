@@ -122,4 +122,8 @@ interface Rinter{
     //Post temp time
     @POST("test-settt")
     fun settemptime(@Query("session") session:Long?, @Body body:TimeList):Call<String>
+
+    //Remove rec
+    @POST("test-rmrec")
+    fun removerec(@Query("id") id:Long?, @Query("fid") fid:Long?, @Query("time") time:Int?): Call<String>
 }

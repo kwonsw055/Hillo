@@ -118,7 +118,16 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
             holder.setImg(urlcache[data!![position].id])
         }
 
-        holder.btn_del.setOnClickListener { deleteData(position) }
+        holder.btn_del.setOnClickListener {
+            val time = data!![position].time
+            //Convert time
+            val convtime = str2date(time.day)!!.num*100000000+time.start*10000+time.end
+
+            RetrofitObj.getinst().removerec(myid, data!![position].id, convtime).enqueue(CallBackClass{
+                Log.i("DEBUGMSG", "remove rec post success")
+            })
+            deleteData(position)
+        }
         holder.btn_start.setOnClickListener {
             //Get friend UUID
             getFriend(context, data!![position].id) { f:Friend?->
