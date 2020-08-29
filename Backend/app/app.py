@@ -6,6 +6,7 @@ import threading
 import queue
 from socket import socket
 
+#Semaphore for accessing free table
 sema_freetable = threading.Semaphore()
 
 #Flask init
@@ -443,7 +444,7 @@ temptimes = []
 tcpPort = 7000
 
 #max TCP Port
-tcpCount = 10000
+maxTcpPort = 10000
 
 #Initialize sessions and semaphores
 for i in range(0,maxsession):
@@ -459,7 +460,7 @@ for i in range(0,maxsession):
     temptimes.append({})
 
 #Initialize ports
-for i in range(tcpPort, tcpCount):
+for i in range(tcpPort, maxTcpPort):
     ports.put(i)
     threadphases.append(0)
 
@@ -535,13 +536,6 @@ def testjoin():
 
     printall()
 
-    ###
-    """for s in (sessions[session]):
-        ip = s[1]
-        data = str(len(sessions[session])).encode()
-        print(data)
-        threading.Thread(target=connect, args=data).start()"""
-    ###
     sema_sessions[session].release()
 
     # Check if user is leader
@@ -638,18 +632,6 @@ def testend():
     freetimes = []
 
     for id, ip in sessions[session]:
-        #Lock when accessing freetable
-        """sema_freetable.acquire()
-        freelist = query(f"select * from {freetable} where {user_id}={id}")
-        sema_freetable.release()
-
-        #Current user's freetime list
-        freetime = []
-
-        #Convert into freetimelist
-        for ft in freelist:
-            freetime.append((ft[free_day], ft[start_time], ft[end_time]))"""
-
         #Get freetime from temptimes
         freetime = temptimes[session][id]
 
@@ -668,14 +650,6 @@ def testend():
         inter = getinter(temp, ft)
         temp = convertinter(inter)
 
-    # Send result via socket
-    # Deprecated
-    """
-    for id, ip in sessions[session]:
-        data = str(temp).encode()
-        print(data)
-        threading.Thread(target=connect, args=(ip, data)).start()"""
-
     # Set up votes
     for i in range(0, len(temp)):
         votes[session].append(0)
@@ -688,11 +662,6 @@ def testend():
     # Open for voting
     votecounts[session] = 0
     sema_sessions[session].release()
-
-    # Return session number
-    #sema_available.acquire()
-    #available.put(session)
-    #sema_available.release()
 
     #Return result
     return jsonify(temp)
@@ -747,26 +716,16 @@ def testvote():
     #Convert item into int
     item = eval(item)
 
+    #Increase vote counts
     sema_sessions[session].acquire()
     votes[session][item] = votes[session][item]+1
     votecounts[session] = votecounts[session]+1
-    """
-    for s in (sessions[session]):
-        ip = s[1]
-        data = str(votecounts[session]).encode()
-        print(data)
-        threading.Thread(target=connect, args=(ip, data)).start()"""
     sema_sessions[session].release()
 
     #If everyone voted, clear session
     if(len(sessions[session]) == votecounts[session]):
 
-        # Send result via socket
-        """
-        for id, ip in sessions[session]:
-            data = str(votes[session]).encode()
-            print(data)
-            threading.Thread(target=connect, args=(ip, data)).start()"""
+        # Wrap up session info
         clearSession(session)
 
     return success_msg
@@ -782,12 +741,14 @@ def clearSession(session):
     while portscount[session] > 0:
         True
 
+    #Clear session info
     votes[session].clear()
     votecounts[session] = -1
     sessions[session].clear()
     givenports[session].clear()
     sessionres[session] = b""
 
+    #Return session number
     available.put(session)
 
 #Set temp free time
