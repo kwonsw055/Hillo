@@ -417,14 +417,8 @@ available = queue.Queue()
 #Semaphores for accessing sessions
 sema_sessions = []
 
-#Semaphore for accessing available queue.
-sema_available = threading.Semaphore()
-
 #Available ports for socket comm.
 ports = queue.Queue()
-
-#Semaphore for accessing ports queue.
-sema_ports = threading.Semaphore()
 
 #Ports assigned for session
 givenports = []
@@ -482,10 +476,7 @@ def testmake():
     if available.empty():
         return error_msg["session_full"]
 
-    #Lock when modifying availble list
-    sema_available.acquire()
     session = available.get()
-    sema_available.release()
 
     #Lock when modifying session
     sema_sessions[session].acquire()
@@ -534,11 +525,9 @@ def testjoin():
         if ((id, request.remote_addr) not in sessions[session]):
             sessions[session].append((id, request.remote_addr))
         # Get port
-        sema_ports.acquire()
         port = ports.get()
         givenports[session].append(port)
         threading.Thread(target=ready_socket, args=(port, session)).start()
-        sema_ports.release()
 
         sema_portcount[session].acquire()
         portscount[session] = portscount[session]+1
@@ -623,10 +612,8 @@ def ready_socket(port, session):
         sema_portcount[session].release()
 
         #Return port
-        sema_ports.acquire()
         print(f"returning port={port}")
         ports.put(port)
-        sema_ports.release()
 
 
 #End session
@@ -801,10 +788,7 @@ def clearSession(session):
     givenports[session].clear()
     sessionres[session] = b""
 
-    # Return session number
-    sema_available.acquire()
     available.put(session)
-    sema_available.release()
 
 #Set temp free time
 @app.route("/test-settt", methods=["POST"])
