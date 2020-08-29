@@ -46,6 +46,10 @@ val baseIP = "34.64.150.182"
 val basePort = 5000
 val baseURL = "http://${baseIP}:${basePort}"
 
+//Debug parameters
+const val debug_toast = true
+const val debug_log = true
+
 //User kakao id
 var myid:Long? = null
 
@@ -62,8 +66,10 @@ lateinit var mainActivity : MainActivity
 val doparse : (Response<String>)->Unit = {
     val parsed = getJsonParse<FreetimeArray>(it)
     recrvadapter.data = parsed.toFreetime()
-    Log.i("DEBUGMSG", "data:")
-    Log.i("DEBUGMSG", recrvadapter.data.toString())
+    if(debug_log){
+        Log.i("DEBUGMSG", "data:")
+        Log.i("DEBUGMSG", recrvadapter.data.toString())
+    }
     recrvadapter.notifyDataSetChanged()
 }
 
@@ -89,12 +95,12 @@ class MainActivity : AppCompatActivity() {
         }.addAfterSuccess {
             //If success, check if my info exists in server
             RetrofitObj.getinst().checkuser(it?.id).enqueue(CallBackClass{
-                Toast.makeText(context, "ID exist confirm", Toast.LENGTH_SHORT).show()
+                if(debug_toast) Toast.makeText(context, "ID exist confirm", Toast.LENGTH_SHORT).show()
             }.addAfterFailure {
                     r: Response<String>->
                 RetrofitObj.getinst().gettest(it?.id, it?.kakaoAccount?.profile?.nickname).enqueue(CallBackClass{
-                    Toast.makeText(context, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
-                    Toast.makeText(context, "ID sign up failure", Toast.LENGTH_SHORT).show()
+                    if(debug_toast) Toast.makeText(context, "ID sign up done", Toast.LENGTH_SHORT).show()}.addAfterFailure {
+                    if(debug_toast) Toast.makeText(context, "ID sign up failure", Toast.LENGTH_SHORT).show()
                 })
             })
         })
@@ -105,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         mainActivity = this
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.i("DEBUGMSG", getHashKey(this))
+        if(debug_log) Log.i("DEBUGMSG", getHashKey(this))
         //Button for recommendation fragment
         val btn_rec = findViewById<ImageButton>(R.id.img_rec)
 
@@ -219,12 +225,12 @@ class MainActivity : AppCompatActivity() {
             //Response object
             val friendresponse = object : TalkResponseCallback<AppFriendsResponse>(){
                 override fun onSuccess(result: AppFriendsResponse?) {
-                    Log.i("DEBUGMSG", "get friend success")
+                    if(debug_log) Log.i("DEBUGMSG", "get friend success")
 
                     result?.friends!!.forEach{
                         //On success
                         info: AppFriendInfo ->
-                        Log.i("DEBUGMSG", info.profileNickname)
+                        if(debug_log) Log.i("DEBUGMSG", info.profileNickname)
 
                         //Check if friend exists
                         getFriend(applicationContext, info.id, {
@@ -241,9 +247,9 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onNotKakaoTalkUser() {}
 
-                override fun onSessionClosed(errorResult: ErrorResult?) {Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage) }
+                override fun onSessionClosed(errorResult: ErrorResult?) {if(debug_log) Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage) }
 
-                override fun onFailure(errorResult: ErrorResult?) { Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage) }
+                override fun onFailure(errorResult: ErrorResult?) {if(debug_log) Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage) }
             }
             do{
                 KakaoTalkService.getInstance().requestAppFriends(context, friendresponse)
@@ -253,16 +259,19 @@ class MainActivity : AppCompatActivity() {
         //Call back object for getting Kakao session
         val sessionCallback = object : ISessionCallback {
             override fun onSessionOpenFailed(exception: KakaoException?) {
-                Log.i("DEBUGMSG", "Login Failed")
-                Log.i("DEBUGMSG", "onSessionOpenFailed: "+exception)
-
-                Toast.makeText(applicationContext, "kakao session failed", Toast.LENGTH_SHORT).show()
-                Toast.makeText(applicationContext, exception?.message, Toast.LENGTH_SHORT).show()
+                if(debug_log) {
+                    Log.i("DEBUGMSG", "Login Failed")
+                    Log.i("DEBUGMSG", "onSessionOpenFailed: " + exception)
+                }
+                if(debug_toast) {
+                    Toast.makeText(applicationContext, "kakao session failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, exception?.message, Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onSessionOpened() {
-                Log.i("DEBUGMSG", "Login Success")
-                Toast.makeText(applicationContext, "kakao login success", Toast.LENGTH_SHORT).show()
+                if(debug_log) Log.i("DEBUGMSG", "Login Success")
+                if(debug_toast) Toast.makeText(applicationContext, "kakao login success", Toast.LENGTH_SHORT).show()
                 getNsetID(applicationContext)
 
                 //On session opened, get friend list
@@ -286,20 +295,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         //When login is done
-        Log.i("DEBUGMSG", "Result Returned")
+        if(debug_log) Log.i("DEBUGMSG", "Result Returned")
         if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
             //refresh token
             AuthService.getInstance().requestAccessTokenInfo(object: ApiResponseCallback<AccessTokenInfoResponse>(){
                 override fun onSuccess(result: AccessTokenInfoResponse?) {
-                    Log.i("DEBUGMSG", "token refresh success")
+                    if(debug_log) Log.i("DEBUGMSG", "token refresh success")
 
-                    Toast.makeText(applicationContext, "token refresh success", Toast.LENGTH_SHORT).show()
+                    if(debug_toast) Toast.makeText(applicationContext, "token refresh success", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onSessionClosed(errorResult: ErrorResult?) {
-                    Log.i("DEBUGMSG", "token refresh failed: "+errorResult)
-                    Toast.makeText(applicationContext, "token refresh failed", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(applicationContext, errorResult?.errorMessage, Toast.LENGTH_SHORT).show()
+                    if(debug_log) Log.i("DEBUGMSG", "token refresh failed: "+errorResult)
+                    if(debug_toast) {
+                        Toast.makeText(applicationContext, "token refresh failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, errorResult?.errorMessage, Toast.LENGTH_SHORT).show()
+                    }
                 }
 
             })
@@ -362,10 +373,11 @@ class KakaoResponseClass : MeV2ResponseCallback(){
     }
 
     override fun onSuccess(result: MeV2Response?) {
-
-        Log.i("DEBUGMSG","response success")
-        Log.i("DEBUGMSG", "id:" +result?.id.toString())
-        Log.i("DEBUGMSG","name: "+result?.kakaoAccount?.profile?.nickname)
+        if(debug_log) {
+            Log.i("DEBUGMSG", "response success")
+            Log.i("DEBUGMSG", "id:" + result?.id.toString())
+            Log.i("DEBUGMSG", "name: " + result?.kakaoAccount?.profile?.nickname)
+        }
 
         //initialize myid
         myid = result?.id
@@ -374,7 +386,7 @@ class KakaoResponseClass : MeV2ResponseCallback(){
     }
 
     override fun onSessionClosed(errorResult: ErrorResult?) {
-        Log.i("DEBUGMSG","Session closed")
+        if(debug_log) Log.i("DEBUGMSG","Session closed")
 
         afterSessionClosed(errorResult)
     }

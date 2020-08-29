@@ -52,7 +52,7 @@ class JoinActivity : AppCompatActivity() {
 
         //Get session number from intent parameter
         session = intent.data?.getQueryParameter("session")?.toLong()
-        Log.i("DEBUGMSG", "session="+session)
+        if(debug_log) Log.i("DEBUGMSG", "session="+session)
 
         //if session == -1, do response to rec
         if(session!!.toInt() == -1){
@@ -167,7 +167,7 @@ class JoinActivity : AppCompatActivity() {
                         btn_join.visibility = View.GONE
                         text_status.text = getString(R.string.status_joined)
                     }
-                    Log.i("DEBUGMSG", "nowport="+nowport)
+                    if(debug_log) Log.i("DEBUGMSG", "nowport="+nowport)
 
                     //Start socket
                     Thread{
@@ -182,12 +182,12 @@ class JoinActivity : AppCompatActivity() {
                         var userCount = 0
 
                         //Keep listening
-                        Log.i("DEBUGMSG", "socket init")
+                        if(debug_log) Log.i("DEBUGMSG", "socket init")
                         try{
                             //accepted socket
                             val socket = Socket(baseIP, nowport)
 
-                            Log.i("DEBUGMSG", "socket connected")
+                            if(debug_log) Log.i("DEBUGMSG", "socket connected")
 
                             //input stream for socket
                             val inputstream = socket.getInputStream()
@@ -202,7 +202,7 @@ class JoinActivity : AppCompatActivity() {
                                     //read data
                                     val data = bufferedreader.readLine()
 
-                                    Log.i("DEBUGMSG", "data = "+data.toString())
+                                    if(debug_log) Log.i("DEBUGMSG", "data = "+data.toString())
 
                                     //check data type
                                     try{
@@ -211,7 +211,7 @@ class JoinActivity : AppCompatActivity() {
                                         data.toInt()
                                         if(stage == 0) userCount = data.toInt()
 
-                                        Log.i("DEBUGMSG", "Is int")
+                                        if(debug_log) Log.i("DEBUGMSG", "Is int")
 
                                         //If already parsed result, goto stage 2
                                         if(stage == 1)stage = 2
@@ -229,7 +229,7 @@ class JoinActivity : AppCompatActivity() {
                                         }
                                     }catch (e: Exception){
                                         //If not int type, then data is the result for available times
-                                        Log.i("DEBUGMSG", "Not int")
+                                        if(debug_log) Log.i("DEBUGMSG", "Not int")
 
                                         //If first time parsing, goto stage 1
                                         if(stage == 0)stage = 1
@@ -280,7 +280,7 @@ class JoinActivity : AppCompatActivity() {
 
                                 //If stage is max, exit
                                 if(stage == maxStage){
-                                    Log.i("DEBUGMSG", "exiting, stage = "+stage)
+                                    if(debug_log) Log.i("DEBUGMSG", "exiting, stage = "+stage)
                                     break
                                 }
                             }//End of while(true)
@@ -288,10 +288,10 @@ class JoinActivity : AppCompatActivity() {
                             socket.close()
                         }
                         catch (e:SocketTimeoutException){
-                            Log.i("DEBUGMSG", "socket timed out")
+                            if(debug_log) Log.i("DEBUGMSG", "socket timed out")
                         }
                         catch (e: SocketException){
-                            Log.i("DEBUGMSG", "socket closed")
+                            if(debug_log) Log.i("DEBUGMSG", "socket closed")
                         }
                     }.start()
 

@@ -124,7 +124,7 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
             val convtime = str2date(time.day)!!.num*100000000+time.start*10000+time.end
 
             RetrofitObj.getinst().removerec(myid, data!![position].id, convtime).enqueue(CallBackClass{
-                Log.i("DEBUGMSG", "remove rec post success")
+                if(debug_log) Log.i("DEBUGMSG", "remove rec post success")
             })
             deleteData(position)
         }
@@ -133,7 +133,7 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
             getFriend(context, data!![position].id) { f:Friend?->
                 if(f == null) {
                     Handler(Looper.getMainLooper()).post{
-                        Toast.makeText(mainActivity, "no friend found", Toast.LENGTH_SHORT).show()
+                        if(debug_toast) Toast.makeText(mainActivity, "no friend found", Toast.LENGTH_SHORT).show()
                     }
                 }
                 else {
@@ -147,16 +147,16 @@ class FreetimeRVAdapter(var data:MutableList<Freetime>?) : RecyclerView.Adapter<
                         KakaoTalkService.getInstance().sendMessageToFriends(listOf(f.uuid), tempparm, object:
                             TalkResponseCallback<MessageSendResponse>() {
                             override fun onSuccess(result: MessageSendResponse?) {
-                                Log.i("DEBUGMSG", "kakao talk messaging success")
+                                if(debug_log) Log.i("DEBUGMSG", "kakao talk messaging success")
                                 Toast.makeText(mainActivity, getString(R.string.toast_kakao_msg_sent), Toast.LENGTH_SHORT).show()
                             }
 
                             override fun onNotKakaoTalkUser() {
-                                Log.i("DEBUGMSG", "kakao talk message failed: Not kakao talk user")
+                                if(debug_log) Log.i("DEBUGMSG", "kakao talk message failed: Not kakao talk user")
                             }
 
                             override fun onSessionClosed(errorResult: ErrorResult?) {
-                                Log.i("DEBUGMSG", "kakao talk message failed: Session closed")
+                                if(debug_log) Log.i("DEBUGMSG", "kakao talk message failed: Session closed")
                             }
 
                         })
@@ -259,12 +259,12 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?, var vote:MutableList<Int>,
         holder.text_vote.visibility = View.GONE
 
         if(voted){
-            Log.i("DEBUGMSG", "voted true")
+            if(debug_log) Log.i("DEBUGMSG", "voted true")
             holder.btn_vote.visibility = View.GONE
         }
 
         if(data!!.size == vote.size){
-            Log.i("DEBUGMSG", "vote done")
+            if(debug_log) Log.i("DEBUGMSG", "vote done")
             activity.runOnUiThread{
                 holder.btn_vote.visibility = View.GONE
                 holder.text_vote.visibility = View.VISIBLE
@@ -274,7 +274,7 @@ class JoinRVAdapter(var data:MutableList<TimeTable>?, var vote:MutableList<Int>,
 
         holder.btn_vote.setOnClickListener {
             RetrofitObj.getinst().votesession(session, position).enqueue(CallBackClass{
-                Log.i("DEBUGMSG", "vote success")
+                if(debug_log) Log.i("DEBUGMSG", "vote success")
                 voted=true
                 activity.runOnUiThread{this.notifyDataSetChanged()}
             })

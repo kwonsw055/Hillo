@@ -34,11 +34,13 @@ class TempTimeFrag: TimeFrag(){
     override fun postTime(timelist: TimeList){
         //Use settemptime instead of settime
         RetrofitObj.getinst().settemptime(session, timelist).enqueue(CallBackClass{
-            Log.i("DEBUGMSG", it.toString())
-            Toast.makeText(appcontext, "Temp Timetable upload success", Toast.LENGTH_SHORT).show()
+            if(debug_log) Log.i("DEBUGMSG", it.toString())
+            if(debug_toast) Toast.makeText(appcontext, "Temp Timetable upload success", Toast.LENGTH_SHORT).show()
         }.addAfterFailure {
-            Toast.makeText(appcontext, "Temp Timetable upload failure", Toast.LENGTH_SHORT).show()
-            Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+            if(debug_toast) {
+                Toast.makeText(appcontext, "Temp Timetable upload failure", Toast.LENGTH_SHORT).show()
+                Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+            }
         })
     }
 }
@@ -222,11 +224,13 @@ open class TimeFrag : Fragment() {
     //Used for posting free time
     open fun postTime(timelist: TimeList){
         RetrofitObj.getinst().settime(timelist).enqueue(CallBackClass{
-            Log.i("DEBUGMSG", it.toString())
-            Toast.makeText(appcontext, "Timetable upload success", Toast.LENGTH_SHORT).show()
+            if(debug_log) Log.i("DEBUGMSG", it.toString())
+            if(debug_toast) Toast.makeText(appcontext, "Timetable upload success", Toast.LENGTH_SHORT).show()
         }.addAfterFailure {
-            Toast.makeText(appcontext, "Timetable upload failure", Toast.LENGTH_SHORT).show()
-            Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+            if(debug_toast) {
+                Toast.makeText(appcontext, "Timetable upload failure", Toast.LENGTH_SHORT).show()
+                Toast.makeText(appcontext, it.errorBody()?.string(), Toast.LENGTH_SHORT).show()
+            }
         })
     }
 

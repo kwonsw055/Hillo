@@ -65,11 +65,11 @@ class MakeFrag : Fragment() {
 //Class for Kakao Link Response
 class msgCallback : ResponseCallback<KakaoLinkResponse>() {
     override fun onSuccess(result: KakaoLinkResponse?) {
-        Log.i("DEBUGMSG", result.toString())
+        if(debug_log) Log.i("DEBUGMSG", result.toString())
     }
 
     override fun onFailure(errorResult: ErrorResult?) {
-        Log.i("DEBUGMSG", errorResult?.errorMessage)
+        if(debug_log) Log.i("DEBUGMSG", errorResult?.errorMessage)
     }
 }
 

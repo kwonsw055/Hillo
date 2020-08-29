@@ -47,17 +47,17 @@ class CallBackClass: Callback<String> {
     }
 
     override fun onFailure(call: Call<String>, t: Throwable) {
-        Log.i("DEBUGMSG", "mytest failed: "+t.message)
+        if(debug_log) Log.i("DEBUGMSG", "mytest failed: "+t.message)
         afterNoConnection(t)
     }
 
     override fun onResponse(call: Call<String>, response: Response<String>) {
         if(response.isSuccessful){
-            Log.i("DEBUGMSG", "rsp="+response.body())
+            if(debug_log) Log.i("DEBUGMSG", "rsp="+response.body())
             afterSuccess(response)
         }
         else{
-            Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody()?.string())
+            if(debug_log) Log.i("DEBUGMSG", "response failed: "+response.code()+": "+response.errorBody()?.string())
             afterFailure(response)
         }
     }

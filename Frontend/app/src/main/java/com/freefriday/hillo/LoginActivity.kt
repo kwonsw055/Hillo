@@ -21,12 +21,14 @@ import com.kakao.util.exception.KakaoException
 class LoginActivity : AppCompatActivity() {
     val sessionCallback = object : ISessionCallback {
         override fun onSessionOpenFailed(exception: KakaoException?) {
-            Log.i("DEBUGMSG", "Login Failed")
-            Log.i("DEBUGMSG", "onSessionOpenFailed: "+exception)
+            if(debug_log) {
+                Log.i("DEBUGMSG", "Login Failed")
+                Log.i("DEBUGMSG", "onSessionOpenFailed: " + exception)
+            }
         }
 
         override fun onSessionOpened() {
-            Log.i("DEBUGMSG", "Login Success")
+            if(debug_log) Log.i("DEBUGMSG", "Login Success")
             UserManagement.getInstance().me(KakaoResponseClass())
             getFriendlist()
         }
@@ -35,9 +37,9 @@ class LoginActivity : AppCompatActivity() {
         val context = AppFriendContext(AppFriendOrder.NICKNAME, 0, 100, "asc")
         val friendresponse = object : TalkResponseCallback<AppFriendsResponse>(){
             override fun onSuccess(result: AppFriendsResponse?) {
-                Log.i("DEBUGMSG", "get friend success")
+                if(debug_log) Log.i("DEBUGMSG", "get friend success")
                 result?.friends!!.forEach{
-                    Log.i("DEBUGMSG", it.profileNickname)
+                    if(debug_log) Log.i("DEBUGMSG", it.profileNickname)
                     insertFriend(applicationContext, Friend(it.id, it.profileNickname, it.profileThumbnailImage, it.uuid), {})
                 }
             }
@@ -46,11 +48,11 @@ class LoginActivity : AppCompatActivity() {
             }
 
             override fun onSessionClosed(errorResult: ErrorResult?) {
-                Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage)
+                if(debug_log) Log.i("DEBUGMSG", "onSessionClosed: "+errorResult!!.errorMessage)
             }
 
             override fun onFailure(errorResult: ErrorResult?) {
-                Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage)
+                if(debug_log) Log.i("DEBUGMSG", "onFailure: "+errorResult!!.errorMessage)
             }
         }
 
@@ -72,7 +74,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.i("DEBUGMSG", "Result Returned")
+        if(debug_log) Log.i("DEBUGMSG", "Result Returned")
         if(Session.getCurrentSession().handleActivityResult(requestCode,resultCode,data)){
             return
         }
