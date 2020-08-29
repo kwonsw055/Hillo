@@ -6,9 +6,6 @@ import threading
 import queue
 from socket import socket
 
-#Semaphore for accessing free table
-sema_freetable = threading.Semaphore()
-
 #Flask init
 app = Flask(__name__)
 
@@ -171,6 +168,7 @@ def checktime(time):
     return (time>=0 and time<2400)
 
 #Insert freetime into DB
+#Deletes current info before inserting
 #Returns status message
 def insert_freetime(id, freetime):
     #Check if id exists
@@ -180,6 +178,9 @@ def insert_freetime(id, freetime):
 
     #list for query strings
     qlist = []
+
+    #Delete current rows
+    qlist.append(f"delete from {freetable} where id={id}")
 
     #Check each freetime
     #If every item is legal, add a query statement to qlist
@@ -196,7 +197,7 @@ def insert_freetime(id, freetime):
         #Everything is okay, now add query statement
         qlist.append(f"insert into {freetable} values({id}, '{int2day(day)}', {start}, {end})")
 
-    #Do insert
+    #Start transaction
     res = query(qlist)
 
     #Check if insertion failed
@@ -322,11 +323,8 @@ def testsett():
     #Make into list of tuple
     freetime = list(zip(day, start, end))
 
-    #Lock when modifying freetable
-    sema_freetable.acquire()
-    query(f"delete from {freetable} where id={id}")
+    #Insert info into freetime table
     res = insert_freetime(id, freetime)
-    sema_freetable.release()
 
     #Return result
     return res
@@ -344,10 +342,8 @@ def testgetf():
     if len(find)==0:
         return error_msg["id_none"]
 
-    #Lock when accessing freetable
-    sema_freetable.acquire()
+    # Get user free time
     mytime = query(f"select * from {freetable} where {user_id}={id}")
-    sema_freetable.release()
 
     #list for available freetimes
     result = []
@@ -368,10 +364,8 @@ def testgetf():
 
     #For each friend, get their free time
     for fid in friendlist:
-        #Lock when accessing freetable
-        sema_freetable.acquire()
+        #Get friend's free time
         ftime = query(f"select * from {freetable} where {user_id}={fid[friend_id]}")
-        sema_freetable.release()
 
         #List for friend's freetime
         ftimelist = []
