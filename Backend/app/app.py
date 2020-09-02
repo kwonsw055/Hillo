@@ -6,8 +6,6 @@ import threading
 import queue
 from socket import socket
 
-sema_freetable = threading.Semaphore()
-
 #Flask init
 app = Flask(__name__)
 
@@ -15,6 +13,7 @@ app = Flask(__name__)
 usertable = "user_table"
 friendtable = "friend_table"
 freetable = "free_table"
+rmtable = "remove_table"
 
 #DB attributes
 user_id = "id"
@@ -30,8 +29,6 @@ success_msg = "Done"
 #leader message
 leader_msg = "Leader"
 
-#
-
 #error messages
 error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_id":("Error: No ID Provided",400),
@@ -42,6 +39,7 @@ error_msg = {"no_parm":("Error: No Parameters Provided",400),
              "no_end":("Error: No End time Provided", 400),
              "no_session":("Error: No session Provided", 400),
              "no_item":("Error: No item Provided", 400),
+             "no_time":("Error: No time Provided", 400),
              "day_time_mis":("Error: Day and Time list mismatch", 400),
              "id_dup":("Error: Duplicate ID", 400),
              "id_none":("Error: Non existing ID", 400),
@@ -170,6 +168,7 @@ def checktime(time):
     return (time>=0 and time<2400)
 
 #Insert freetime into DB
+#Deletes current info before inserting
 #Returns status message
 def insert_freetime(id, freetime):
     #Check if id exists
@@ -179,6 +178,9 @@ def insert_freetime(id, freetime):
 
     #list for query strings
     qlist = []
+
+    #Delete current rows
+    qlist.append(f"delete from {freetable} where id={id}")
 
     #Check each freetime
     #If every item is legal, add a query statement to qlist
@@ -195,7 +197,7 @@ def insert_freetime(id, freetime):
         #Everything is okay, now add query statement
         qlist.append(f"insert into {freetable} values({id}, '{int2day(day)}', {start}, {end})")
 
-    #Do insert
+    #Start transaction
     res = query(qlist)
 
     #Check if insertion failed
@@ -321,11 +323,8 @@ def testsett():
     #Make into list of tuple
     freetime = list(zip(day, start, end))
 
-    #Lock when modifying freetable
-    sema_freetable.acquire()
-    query(f"delete from {freetable} where id={id}")
+    #Insert info into freetime table
     res = insert_freetime(id, freetime)
-    sema_freetable.release()
 
     #Return result
     return res
@@ -343,10 +342,8 @@ def testgetf():
     if len(find)==0:
         return error_msg["id_none"]
 
-    #Lock when accessing freetable
-    sema_freetable.acquire()
+    # Get user free time
     mytime = query(f"select * from {freetable} where {user_id}={id}")
-    sema_freetable.release()
 
     #list for available freetimes
     result = []
@@ -367,10 +364,8 @@ def testgetf():
 
     #For each friend, get their free time
     for fid in friendlist:
-        #Lock when accessing freetable
-        sema_freetable.acquire()
+        #Get friend's free time
         ftime = query(f"select * from {freetable} where {user_id}={fid[friend_id]}")
-        sema_freetable.release()
 
         #List for friend's freetime
         ftimelist = []
@@ -382,7 +377,17 @@ def testgetf():
         #Get intersection of mytimelist and friend's freetimelist
         inter = getinter(mytimelist, ftimelist)
         #Append to result
-        if len(inter)>0: result.append({"fid":fid[friend_id], "name":fid[user_name],"times":inter})
+        if len(inter)>0:
+            #Get removed item list
+            rmlist = query(f"select {free_day}, {start_time}, {end_time} from {rmtable} where {user_id}={id} and {friend_id}={fid[friend_id]}")
+
+            #Append to result only if not in rmlist
+            interresult = []
+            for i in inter:
+                if i not in rmlist:
+                    interresult.append(i)
+
+            result.append({"fid":fid[friend_id], "name":fid[user_name],"times":interresult})
 
     #Return result
     return jsonify({"result":result})
@@ -407,14 +412,8 @@ available = queue.Queue()
 #Semaphores for accessing sessions
 sema_sessions = []
 
-#Semaphore for accessing available queue.
-sema_available = threading.Semaphore()
-
 #Available ports for socket comm.
 ports = queue.Queue()
-
-#Semaphore for accessing ports queue.
-sema_ports = threading.Semaphore()
 
 #Ports assigned for session
 givenports = []
@@ -431,11 +430,15 @@ threadphases = []
 #Results for sessions
 sessionres = []
 
+#Temp freetime for sessions.
+#Each session contains a dict.
+temptimes = []
+
 #Base TCP Port
 tcpPort = 7000
 
 #max TCP Port
-tcpCount = 10000
+maxTcpPort = 10000
 
 #Initialize sessions and semaphores
 for i in range(0,maxsession):
@@ -448,9 +451,10 @@ for i in range(0,maxsession):
     sessionres.append(b"")
     portscount.append(0)
     sema_portcount.append(threading.Semaphore())
+    temptimes.append({})
 
 #Initialize ports
-for i in range(tcpPort, tcpCount):
+for i in range(tcpPort, maxTcpPort):
     ports.put(i)
     threadphases.append(0)
 
@@ -467,16 +471,14 @@ def testmake():
     if available.empty():
         return error_msg["session_full"]
 
-    #Lock when modifying availble list
-    sema_available.acquire()
     session = available.get()
-    sema_available.release()
 
     #Lock when modifying session
     sema_sessions[session].acquire()
     sessions[session].clear()
     votes[session].clear()
     votecounts[session] = -1
+    temptimes[session].clear()
     #Add user info
     sessions[session].append((id, request.remote_addr ))
     sema_sessions[session].release()
@@ -518,11 +520,9 @@ def testjoin():
         if ((id, request.remote_addr) not in sessions[session]):
             sessions[session].append((id, request.remote_addr))
         # Get port
-        sema_ports.acquire()
         port = ports.get()
         givenports[session].append(port)
         threading.Thread(target=ready_socket, args=(port, session)).start()
-        sema_ports.release()
 
         sema_portcount[session].acquire()
         portscount[session] = portscount[session]+1
@@ -530,13 +530,6 @@ def testjoin():
 
     printall()
 
-    ###
-    """for s in (sessions[session]):
-        ip = s[1]
-        data = str(len(sessions[session])).encode()
-        print(data)
-        threading.Thread(target=connect, args=data).start()"""
-    ###
     sema_sessions[session].release()
 
     # Check if user is leader
@@ -607,10 +600,8 @@ def ready_socket(port, session):
         sema_portcount[session].release()
 
         #Return port
-        sema_ports.acquire()
         print(f"returning port={port}")
         ports.put(port)
-        sema_ports.release()
 
 
 #End session
@@ -635,17 +626,8 @@ def testend():
     freetimes = []
 
     for id, ip in sessions[session]:
-        #Lock when accessing freetable
-        sema_freetable.acquire()
-        freelist = query(f"select * from {freetable} where {user_id}={id}")
-        sema_freetable.release()
-
-        #Current user's freetime list
-        freetime = []
-
-        #Convert into freetimelist
-        for ft in freelist:
-            freetime.append((ft[free_day], ft[start_time], ft[end_time]))
+        #Get freetime from temptimes
+        freetime = temptimes[session][id]
 
         #Append to result
         freetimes.append(freetime)
@@ -662,14 +644,6 @@ def testend():
         inter = getinter(temp, ft)
         temp = convertinter(inter)
 
-    # Send result via socket
-    # Deprecated
-    """
-    for id, ip in sessions[session]:
-        data = str(temp).encode()
-        print(data)
-        threading.Thread(target=connect, args=(ip, data)).start()"""
-
     # Set up votes
     for i in range(0, len(temp)):
         votes[session].append(0)
@@ -682,11 +656,6 @@ def testend():
     # Open for voting
     votecounts[session] = 0
     sema_sessions[session].release()
-
-    # Return session number
-    #sema_available.acquire()
-    #available.put(session)
-    #sema_available.release()
 
     #Return result
     return jsonify(temp)
@@ -741,26 +710,16 @@ def testvote():
     #Convert item into int
     item = eval(item)
 
+    #Increase vote counts
     sema_sessions[session].acquire()
     votes[session][item] = votes[session][item]+1
     votecounts[session] = votecounts[session]+1
-    """
-    for s in (sessions[session]):
-        ip = s[1]
-        data = str(votecounts[session]).encode()
-        print(data)
-        threading.Thread(target=connect, args=(ip, data)).start()"""
     sema_sessions[session].release()
 
     #If everyone voted, clear session
     if(len(sessions[session]) == votecounts[session]):
 
-        # Send result via socket
-        """
-        for id, ip in sessions[session]:
-            data = str(votes[session]).encode()
-            print(data)
-            threading.Thread(target=connect, args=(ip, data)).start()"""
+        # Wrap up session info
         clearSession(session)
 
     return success_msg
@@ -776,13 +735,110 @@ def clearSession(session):
     while portscount[session] > 0:
         True
 
+    #Clear session info
     votes[session].clear()
     votecounts[session] = -1
     sessions[session].clear()
     givenports[session].clear()
     sessionres[session] = b""
 
-    # Return session number
-    sema_available.acquire()
+    #Return session number
     available.put(session)
-    sema_available.release()
+
+#Set temp free time
+@app.route("/test-settt", methods=["POST"])
+def testsettt():
+    #Json for free time list
+    json = request.json
+
+    #Check is Json is in correct form
+    if json is None:
+        return error_msg["json_none"]
+    if "id" not in json:
+        return error_msg["no_id"]
+    if "day" not in json:
+        return error_msg["no_day"]
+    if "start" not in json:
+        return error_msg["no_start"]
+    if "end" not in json:
+        return error_msg["no_end"]
+
+    # Get session
+    session = request.args.get("session")
+    if session is None:
+        return error_msg["no_session"]
+
+    # Convert session into int
+    session = eval(session)
+
+    #Get id
+    id = json["id"]
+
+    #Get list for day, start, end
+    day = json["day"]
+    start = json["start"]
+    end = json["end"]
+
+    #Make sure list length are all same
+    if len(day)!=len(start) or len(day)!=len(end):
+        return error_msg["day_time_mis"]
+
+    #Make into list of tuple
+    freetime = list(zip(day, start, end))
+    res = []
+    for time in freetime:
+        res.append((int2day(time[0]),time[1],time[2]))
+
+    #Lock when modifying temptimes
+    sema_sessions[session].acquire()
+    temptimes[session][str(id)] = res
+    print(temptimes[session])
+    sema_sessions[session].release()
+
+    #Return result
+    return success_msg
+
+#Insert removed recommendation into DB
+#Returns status message
+def insert_removed(id, fid, day, start, end):
+    #Check if id exists
+    find = query(f"select * from {usertable} where {user_id}={id}")
+    if len(find)==0:
+        return error_msg["id_none"]
+
+    #Do insert
+    res = query(f"insert into {rmtable} values({id},{fid},'{int2day(day)}', {start}, {end})")
+
+    #Check if insertion failed
+    if res is None:
+        return error_msg["insert_fail"]
+
+    #If success, return success message
+    return success_msg
+
+#Remove recommendation
+@app.route("/test-rmrec", methods=["POST"])
+def testrmrec():
+    # Get id
+    id = request.args.get("id")
+    if id is None:
+        return error_msg["no_id"]
+
+    # Get fid
+    fid = request.args.get("fid")
+    if fid is None:
+        return error_msg["no_fid"]
+
+    # Get time
+    time = request.args.get("time")
+    if time is None:
+        return error_msg["no_time"]
+    time = eval(time)
+
+    # deconstruct time
+    day = time//100000000
+    start = (time%100000000)//10000
+    end = time%10000
+
+    # Insert
+    return insert_removed(id, fid, day, start, end)
